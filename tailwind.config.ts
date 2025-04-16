@@ -52,6 +52,19 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				netx: {
+					50: '#f0f4ff',
+					100: '#e0e9ff',
+					200: '#c7d7fe',
+					300: '#a4bcfd',
+					400: '#819af9',
+					500: '#6375f5',
+					600: '#4c54e8', 
+					700: '#4042c9',
+					800: '#3539a3',
+					900: '#2f3480',
+					950: '#1a1e45'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
