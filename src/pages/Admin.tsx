@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for tokens
 const initialTokens = [
@@ -101,16 +104,69 @@ export default function Admin() {
   const [nodes, setNodes] = useState(initialNodes);
   const [tokenSearchValue, setTokenSearchValue] = useState("");
   const [nodeSearchValue, setNodeSearchValue] = useState("");
+  const { toast } = useToast();
+  
+  // New state for form data
+  const [newTokenData, setNewTokenData] = useState({
+    name: "",
+    symbol: "",
+    marketCap: "",
+    status: "pending",
+    creator: "Admin"
+  });
+  
+  const [newNodeData, setNewNodeData] = useState({
+    name: "",
+    type: "slave",
+    ip: "",
+    region: "US-East"
+  });
 
   // Functions for token management
   const disableToken = (id: string) => {
     setTokens(tokens.map(token => 
       token.id === id ? { ...token, status: token.status === "active" ? "disabled" : "active" } : token
     ));
+    
+    toast({
+      title: "Token Status Updated",
+      description: "The token status has been successfully changed.",
+    });
   };
 
   const removeToken = (id: string) => {
     setTokens(tokens.filter(token => token.id !== id));
+    
+    toast({
+      title: "Token Removed",
+      description: "The token has been successfully removed from the system.",
+    });
+  };
+  
+  const addNewToken = () => {
+    const newToken = {
+      id: (tokens.length + 1).toString(),
+      name: newTokenData.name,
+      symbol: newTokenData.symbol,
+      marketCap: newTokenData.marketCap,
+      status: newTokenData.status,
+      creator: newTokenData.creator,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+    };
+    
+    setTokens([...tokens, newToken]);
+    setNewTokenData({
+      name: "",
+      symbol: "",
+      marketCap: "",
+      status: "pending",
+      creator: "Admin"
+    });
+    
+    toast({
+      title: "Token Added",
+      description: `New token ${newTokenData.name} (${newTokenData.symbol}) has been created.`,
+    });
   };
 
   const filteredTokens = tokens.filter(token => 
@@ -123,10 +179,46 @@ export default function Admin() {
     setNodes(nodes.map(node => 
       node.id === id ? { ...node, status: node.status === "online" ? "offline" : "online" } : node
     ));
+    
+    toast({
+      title: "Node Status Updated",
+      description: "The node status has been successfully changed.",
+    });
   };
 
   const removeNode = (id: string) => {
     setNodes(nodes.filter(node => node.id !== id));
+    
+    toast({
+      title: "Node Removed",
+      description: "The node has been successfully removed from the network.",
+    });
+  };
+  
+  const addNewNode = (type: "main" | "slave") => {
+    const newNode = {
+      id: `node-${(nodes.length + 1).toString().padStart(3, '0')}`,
+      name: newNodeData.name,
+      type: type,
+      status: "offline",
+      ip: newNodeData.ip,
+      region: newNodeData.region,
+      connections: 0,
+      lastSeen: "Just now"
+    };
+    
+    setNodes([...nodes, newNode]);
+    setNewNodeData({
+      name: "",
+      type: "slave",
+      ip: "",
+      region: "US-East"
+    });
+    
+    toast({
+      title: "Node Added",
+      description: `New ${type} node "${newNodeData.name}" has been added to the network.`,
+    });
   };
 
   const filteredNodes = nodes.filter(node => 
@@ -183,10 +275,63 @@ export default function Admin() {
                     onChange={(e) => setTokenSearchValue(e.target.value)}
                   />
                 </div>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add New Token
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add New Token
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Token</DialogTitle>
+                      <DialogDescription>
+                        Create a new token in the NETX Forge ecosystem.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="token-name" className="text-right">
+                          Name
+                        </Label>
+                        <Input 
+                          id="token-name" 
+                          value={newTokenData.name} 
+                          onChange={(e) => setNewTokenData({...newTokenData, name: e.target.value})} 
+                          className="col-span-3" 
+                          placeholder="e.g. NETX Token"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="token-symbol" className="text-right">
+                          Symbol
+                        </Label>
+                        <Input 
+                          id="token-symbol" 
+                          value={newTokenData.symbol} 
+                          onChange={(e) => setNewTokenData({...newTokenData, symbol: e.target.value})} 
+                          className="col-span-3" 
+                          placeholder="e.g. NTX"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="token-market-cap" className="text-right">
+                          Market Cap
+                        </Label>
+                        <Input 
+                          id="token-market-cap" 
+                          value={newTokenData.marketCap} 
+                          onChange={(e) => setNewTokenData({...newTokenData, marketCap: e.target.value})} 
+                          className="col-span-3" 
+                          placeholder="e.g. 1,000,000"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={addNewToken}>Add Token</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
               
               <div className="rounded-md border">
@@ -277,14 +422,121 @@ export default function Admin() {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Main Node
-                  </Button>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Slave Node
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Main Node
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Main Node</DialogTitle>
+                        <DialogDescription>
+                          Add a new main node to the NETX Forge network.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="node-name" className="text-right">
+                            Name
+                          </Label>
+                          <Input 
+                            id="node-name" 
+                            value={newNodeData.name} 
+                            onChange={(e) => setNewNodeData({...newNodeData, name: e.target.value})} 
+                            className="col-span-3" 
+                            placeholder="e.g. Main Node Alpha"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="node-ip" className="text-right">
+                            IP Address
+                          </Label>
+                          <Input 
+                            id="node-ip" 
+                            value={newNodeData.ip} 
+                            onChange={(e) => setNewNodeData({...newNodeData, ip: e.target.value})} 
+                            className="col-span-3" 
+                            placeholder="e.g. 192.168.1.1"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="node-region" className="text-right">
+                            Region
+                          </Label>
+                          <Input 
+                            id="node-region" 
+                            value={newNodeData.region} 
+                            onChange={(e) => setNewNodeData({...newNodeData, region: e.target.value})} 
+                            className="col-span-3" 
+                            placeholder="e.g. US-East"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={() => addNewNode("main")}>Add Main Node</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Slave Node
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Slave Node</DialogTitle>
+                        <DialogDescription>
+                          Add a new slave node to the NETX Forge network.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="node-name-slave" className="text-right">
+                            Name
+                          </Label>
+                          <Input 
+                            id="node-name-slave" 
+                            value={newNodeData.name} 
+                            onChange={(e) => setNewNodeData({...newNodeData, name: e.target.value})} 
+                            className="col-span-3" 
+                            placeholder="e.g. Slave Node 1"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="node-ip-slave" className="text-right">
+                            IP Address
+                          </Label>
+                          <Input 
+                            id="node-ip-slave" 
+                            value={newNodeData.ip} 
+                            onChange={(e) => setNewNodeData({...newNodeData, ip: e.target.value})} 
+                            className="col-span-3" 
+                            placeholder="e.g. 192.168.1.2"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="node-region-slave" className="text-right">
+                            Region
+                          </Label>
+                          <Input 
+                            id="node-region-slave" 
+                            value={newNodeData.region} 
+                            onChange={(e) => setNewNodeData({...newNodeData, region: e.target.value})} 
+                            className="col-span-3" 
+                            placeholder="e.g. US-East"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={() => addNewNode("slave")}>Add Slave Node</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
               

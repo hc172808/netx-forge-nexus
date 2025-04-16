@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar } from "@/components/ui/avatar";
 import { Copy, Download, ExternalLink, FileText, Fingerprint, Import, Key, Plus, Wallet as WalletIcon } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const dummyWalletData = {
   address: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t",
@@ -92,10 +94,82 @@ const dummyTransactionHistory = [
 export default function Wallet() {
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [receiveModalOpen, setReceiveModalOpen] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  // New states for wallet creation
+  const [seedPhrase, setSeedPhrase] = useState("");
+  const [walletPassword, setWalletPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
+  const [walletName, setWalletName] = useState("");
   
   const handleSendToken = (address: string, amount: string) => {
     console.log("Sending", amount, "to", address);
-    // In a real application, this would call a blockchain transaction
+    toast({
+      title: "Transaction Initiated",
+      description: `Sending ${amount} NETX to ${address.substring(0, 8)}...`,
+    });
+  };
+  
+  const createWalletWithSecretPhrase = () => {
+    // In a real app, this would create a wallet with the seed phrase
+    toast({
+      title: "Wallet Created",
+      description: "New wallet created with Secret Phrase.",
+    });
+  };
+  
+  const createWalletWithSwift = () => {
+    // In a real app, this would create a wallet with Swift
+    toast({
+      title: "Swift Wallet Initialized",
+      description: "New Swift Wallet created successfully.",
+    });
+  };
+  
+  const importWallet = (type: string) => {
+    if (type === "phrase" && seedPhrase) {
+      toast({
+        title: "Wallet Imported",
+        description: "Your wallet has been imported via seed phrase.",
+      });
+    } else if (type === "backup") {
+      toast({
+        title: "Google Drive Connection",
+        description: "Connecting to Google Drive for wallet restoration...",
+      });
+    } else if (type === "viewonly" && walletAddress) {
+      toast({
+        title: "View-Only Wallet Added",
+        description: `Wallet ${walletAddress.substring(0, 8)}... added in view-only mode.`,
+      });
+    }
+  };
+  
+  const handleExplorer = () => {
+    navigate("/explorer");
+  };
+  
+  const handleManageWallets = () => {
+    toast({
+      title: "Wallet Management",
+      description: "Opening wallet management interface...",
+    });
+  };
+  
+  const handleExportPrivateKey = () => {
+    toast({
+      title: "Security Warning",
+      description: "Exporting private keys should be done with caution. Your private key will be displayed securely.",
+    });
+  };
+  
+  const handleBackupWallet = () => {
+    toast({
+      title: "Wallet Backup",
+      description: "Starting wallet backup process...",
+    });
   };
   
   return (
@@ -120,11 +194,19 @@ export default function Wallet() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" className="h-24 flex flex-col items-center justify-center">
+                  <Button 
+                    variant="outline" 
+                    className="h-24 flex flex-col items-center justify-center"
+                    onClick={createWalletWithSecretPhrase}
+                  >
                     <Key className="h-6 w-6 mb-2" />
                     <span>Create with Secret Phrase</span>
                   </Button>
-                  <Button variant="outline" className="h-24 flex flex-col items-center justify-center">
+                  <Button 
+                    variant="outline" 
+                    className="h-24 flex flex-col items-center justify-center"
+                    onClick={createWalletWithSwift}
+                  >
                     <Fingerprint className="h-6 w-6 mb-2" />
                     <span>Create with Swift Wallet</span>
                   </Button>
@@ -157,18 +239,33 @@ export default function Wallet() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="seedPhrase">Enter your seed phrase</Label>
-                      <Input id="seedPhrase" placeholder="Enter 12, 18, or 24-word seed phrase" />
+                      <Input 
+                        id="seedPhrase" 
+                        placeholder="Enter 12, 18, or 24-word seed phrase" 
+                        value={seedPhrase}
+                        onChange={(e) => setSeedPhrase(e.target.value)}
+                      />
                       <p className="text-xs text-muted-foreground">
                         Enter your 12, 18, or 24-word recovery phrase, with spaces between each word
                       </p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="walletPassword">New Wallet Password</Label>
-                      <Input id="walletPassword" type="password" />
+                      <Input 
+                        id="walletPassword" 
+                        type="password" 
+                        value={walletPassword}
+                        onChange={(e) => setWalletPassword(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input id="confirmPassword" type="password" />
+                      <Input 
+                        id="confirmPassword" 
+                        type="password" 
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
                     </div>
                   </div>
                 </TabsContent>
@@ -179,7 +276,7 @@ export default function Wallet() {
                     <p className="text-sm text-muted-foreground mb-4">
                       Connect to your Google Drive to restore a backed up wallet
                     </p>
-                    <Button>
+                    <Button onClick={() => importWallet("backup")}>
                       Connect to Google Drive
                     </Button>
                   </div>
@@ -188,20 +285,32 @@ export default function Wallet() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="walletAddress">Wallet Address</Label>
-                      <Input id="walletAddress" placeholder="Enter wallet address" />
+                      <Input 
+                        id="walletAddress" 
+                        placeholder="Enter wallet address" 
+                        value={walletAddress}
+                        onChange={(e) => setWalletAddress(e.target.value)}
+                      />
                       <p className="text-xs text-muted-foreground">
                         View-only wallets can only monitor balances and transactions
                       </p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="walletName">Wallet Name (Optional)</Label>
-                      <Input id="walletName" placeholder="e.g. My View-Only Wallet" />
+                      <Input 
+                        id="walletName" 
+                        placeholder="e.g. My View-Only Wallet" 
+                        value={walletName}
+                        onChange={(e) => setWalletName(e.target.value)}
+                      />
                     </div>
                   </div>
                 </TabsContent>
               </Tabs>
               <DialogFooter>
-                <Button type="submit">Import Wallet</Button>
+                <Button type="submit" onClick={() => importWallet(
+                  document.querySelector('[role="tabpanel"][data-state="active"]')?.getAttribute('data-value') || "phrase"
+                )}>Import Wallet</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -220,19 +329,19 @@ export default function Wallet() {
           />
           
           <div className="mt-4 flex gap-2 flex-col">
-            <Button variant="outline" className="justify-start">
+            <Button variant="outline" className="justify-start" onClick={handleManageWallets}>
               <WalletIcon className="h-4 w-4 mr-2" />
               Manage Wallets
             </Button>
-            <Button variant="outline" className="justify-start">
+            <Button variant="outline" className="justify-start" onClick={handleExplorer}>
               <ExternalLink className="h-4 w-4 mr-2" />
               View in Explorer
             </Button>
-            <Button variant="outline" className="justify-start">
+            <Button variant="outline" className="justify-start" onClick={handleExportPrivateKey}>
               <FileText className="h-4 w-4 mr-2" />
               Export Private Key
             </Button>
-            <Button variant="outline" className="justify-start">
+            <Button variant="outline" className="justify-start" onClick={handleBackupWallet}>
               <Copy className="h-4 w-4 mr-2" />
               Backup Wallet
             </Button>
@@ -353,7 +462,7 @@ export default function Wallet() {
                 </Table>
               </div>
               <div className="mt-4 text-right">
-                <Button variant="outline" size="sm">View All Transactions</Button>
+                <Button variant="outline" size="sm" onClick={() => navigate("/history")}>View All Transactions</Button>
               </div>
             </CardContent>
           </Card>

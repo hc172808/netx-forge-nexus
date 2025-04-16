@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import Dashboard from "./pages/Dashboard";
 import Wallet from "./pages/Wallet";
@@ -42,6 +42,13 @@ const App = () => (
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            {/* Redirects for common typos */}
+            <Route path="/users" element={<Navigate to="/admin/users" replace />} />
+            <Route path="/tokens" element={<Navigate to="/marketplace" replace />} />
+            <Route path="/create-token" element={<Navigate to="/token-creation" replace />} />
+            <Route path="/profile" element={<Navigate to="/wallet" replace />} />
+            <Route path="/chart" element={<Navigate to="/analytics" replace />} />
+            <Route path="/transactions" element={<Navigate to="/history" replace />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

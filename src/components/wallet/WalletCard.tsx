@@ -5,6 +5,7 @@ import { Copy, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface WalletCardProps {
   address: string;
@@ -26,6 +27,7 @@ export function WalletCard({
   className,
 }: WalletCardProps) {
   const [showAddress, setShowAddress] = useState(false);
+  const { toast } = useToast();
   
   const formatAddress = (address: string) => {
     if (!showAddress) {
@@ -36,7 +38,10 @@ export function WalletCard({
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(address);
-    // You would normally show a toast notification here
+    toast({
+      title: "Address Copied",
+      description: "Wallet address has been copied to clipboard.",
+    });
   };
 
   return (

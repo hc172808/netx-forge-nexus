@@ -5,10 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart4, Edit, Key, Lock, Plus, Search, Shield, Trash, Unlock, User, UserCheck, UserCog, UserRound, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for users
 const initialUsers = [
@@ -72,15 +75,62 @@ const initialUsers = [
 export default function AdminUsers() {
   const [users, setUsers] = useState(initialUsers);
   const [searchValue, setSearchValue] = useState("");
+  const { toast } = useToast();
+  
+  // New state for user form
+  const [newUserData, setNewUserData] = useState({
+    name: "",
+    email: "",
+    role: "user",
+    avatarUrl: "https://placehold.co/150x150/5e57e8/ffffff.png?text=NU"
+  });
 
   const toggleUserStatus = (id: string) => {
     setUsers(users.map(user => 
       user.id === id ? { ...user, status: user.status === "active" ? "suspended" : "active" } : user
     ));
+    
+    toast({
+      title: "User Status Updated",
+      description: "The user status has been changed successfully.",
+    });
   };
 
   const removeUser = (id: string) => {
     setUsers(users.filter(user => user.id !== id));
+    
+    toast({
+      title: "User Removed",
+      description: "The user has been removed from the system.",
+    });
+  };
+  
+  const addNewUser = () => {
+    // In a real app, this would create a new user in the system
+    const newUser = {
+      id: (users.length + 1).toString(),
+      name: newUserData.name,
+      email: newUserData.email,
+      role: newUserData.role,
+      status: "active",
+      walletCount: 0,
+      lastLogin: "Never",
+      created: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      avatarUrl: newUserData.avatarUrl
+    };
+    
+    setUsers([...users, newUser]);
+    setNewUserData({
+      name: "",
+      email: "",
+      role: "user",
+      avatarUrl: "https://placehold.co/150x150/5e57e8/ffffff.png?text=NU"
+    });
+    
+    toast({
+      title: "User Created",
+      description: `New user ${newUserData.name} has been added to the system.`,
+    });
   };
 
   const filteredUsers = users.filter(user => 
@@ -182,10 +232,70 @@ export default function AdminUsers() {
                 onChange={(e) => setSearchValue(e.target.value)}
               />
             </div>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add New User
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add New User
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New User</DialogTitle>
+                  <DialogDescription>
+                    Create a new user account in the NETX Forge system.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                      Name
+                    </Label>
+                    <Input 
+                      id="name" 
+                      value={newUserData.name} 
+                      onChange={(e) => setNewUserData({...newUserData, name: e.target.value})}
+                      placeholder="John Doe" 
+                      className="col-span-3" 
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="email" className="text-right">
+                      Email
+                    </Label>
+                    <Input 
+                      id="email" 
+                      value={newUserData.email}
+                      onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
+                      placeholder="john@example.com" 
+                      className="col-span-3" 
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="role" className="text-right">
+                      Role
+                    </Label>
+                    <Select
+                      value={newUserData.role}
+                      onValueChange={(value) => setNewUserData({...newUserData, role: value})}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="developer">Developer</SelectItem>
+                        <SelectItem value="contractor">Contractor</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={addNewUser}>Create User</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
           
           <div className="rounded-md border">
