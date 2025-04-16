@@ -8,8 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ArrowDownUp, ArrowLeft, ArrowRight, Calendar, Check, ChevronRight, Download, ExternalLink, FileText, Filter, Search, SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
+import { BlocksViewModal } from "@/components/history/BlocksViewModal";
 
 export default function History() {
+  const [blocksModalOpen, setBlocksModalOpen] = useState(false);
+  
   // Dummy transaction data
   const transactions = [
     {
@@ -397,6 +401,22 @@ export default function History() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add button to view blocks */}
+      <div className="flex justify-end">
+        <Button 
+          variant="outline" 
+          onClick={() => setBlocksModalOpen(true)}
+        >
+          View Blocks
+        </Button>
+      </div>
+      
+      {/* Blocks View Modal */}
+      <BlocksViewModal 
+        open={blocksModalOpen} 
+        onOpenChange={setBlocksModalOpen} 
+      />
     </div>
   );
 }
