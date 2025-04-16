@@ -1,10 +1,12 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WalletCard } from "@/components/wallet/WalletCard";
 import { SendTokenModal } from "@/components/wallet/SendTokenModal";
 import { ReceiveTokenModal } from "@/components/wallet/ReceiveTokenModal";
+import { ManageWalletsModal } from "@/components/wallet/ManageWalletsModal";
+import { ExportPrivateKeyModal } from "@/components/wallet/ExportPrivateKeyModal";
+import { BackupWalletModal } from "@/components/wallet/BackupWalletModal";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -94,10 +96,13 @@ const dummyTransactionHistory = [
 export default function Wallet() {
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [receiveModalOpen, setReceiveModalOpen] = useState(false);
+  const [manageWalletsModalOpen, setManageWalletsModalOpen] = useState(false);
+  const [exportPrivateKeyModalOpen, setExportPrivateKeyModalOpen] = useState(false);
+  const [backupWalletModalOpen, setBackupWalletModalOpen] = useState(false);
+  
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // New states for wallet creation
   const [seedPhrase, setSeedPhrase] = useState("");
   const [walletPassword, setWalletPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -113,7 +118,6 @@ export default function Wallet() {
   };
   
   const createWalletWithSecretPhrase = () => {
-    // In a real app, this would create a wallet with the seed phrase
     toast({
       title: "Wallet Created",
       description: "New wallet created with Secret Phrase.",
@@ -121,7 +125,6 @@ export default function Wallet() {
   };
   
   const createWalletWithSwift = () => {
-    // In a real app, this would create a wallet with Swift
     toast({
       title: "Swift Wallet Initialized",
       description: "New Swift Wallet created successfully.",
@@ -152,24 +155,15 @@ export default function Wallet() {
   };
   
   const handleManageWallets = () => {
-    toast({
-      title: "Wallet Management",
-      description: "Opening wallet management interface...",
-    });
+    setManageWalletsModalOpen(true);
   };
   
   const handleExportPrivateKey = () => {
-    toast({
-      title: "Security Warning",
-      description: "Exporting private keys should be done with caution. Your private key will be displayed securely.",
-    });
+    setExportPrivateKeyModalOpen(true);
   };
   
   const handleBackupWallet = () => {
-    toast({
-      title: "Wallet Backup",
-      description: "Starting wallet backup process...",
-    });
+    setBackupWalletModalOpen(true);
   };
   
   return (
@@ -482,6 +476,23 @@ export default function Wallet() {
         onOpenChange={setReceiveModalOpen}
         walletAddress={dummyWalletData.address}
         tokenSymbol={dummyWalletData.tokenSymbol}
+      />
+      
+      <ManageWalletsModal
+        open={manageWalletsModalOpen}
+        onOpenChange={setManageWalletsModalOpen}
+      />
+      
+      <ExportPrivateKeyModal
+        open={exportPrivateKeyModalOpen}
+        onOpenChange={setExportPrivateKeyModalOpen}
+        walletAddress={dummyWalletData.address}
+      />
+      
+      <BackupWalletModal
+        open={backupWalletModalOpen}
+        onOpenChange={setBackupWalletModalOpen}
+        walletAddress={dummyWalletData.address}
       />
     </div>
   );

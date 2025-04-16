@@ -18,6 +18,7 @@ import History from "./pages/History";
 import Admin from "./pages/Admin";
 import AdminUsers from "./pages/AdminUsers";
 import Register from "./pages/Register";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/logout" element={<Navigate to="/login" replace />} />
           
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
@@ -40,6 +42,7 @@ const App = () => (
             <Route path="/exchange" element={<Exchange />} />
             <Route path="/explorer" element={<Explorer />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             {/* Redirects for common typos */}

@@ -32,12 +32,15 @@ const NotFound = () => {
               Return to Dashboard
             </Link>
           </Button>
-          <div className="mt-4">
-            <Link to="/wallet" className="text-primary hover:underline mx-2">Wallet</Link>
-            <Link to="/marketplace" className="text-primary hover:underline mx-2">Marketplace</Link>
-            <Link to="/exchange" className="text-primary hover:underline mx-2">Exchange</Link>
-            <Link to="/explorer" className="text-primary hover:underline mx-2">Explorer</Link>
-            <Link to="/admin" className="text-primary hover:underline mx-2">Admin</Link>
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <Link to="/wallet" className="text-primary hover:underline">Wallet</Link>
+            <Link to="/marketplace" className="text-primary hover:underline">Marketplace</Link>
+            <Link to="/exchange" className="text-primary hover:underline">Exchange</Link>
+            <Link to="/explorer" className="text-primary hover:underline">Explorer</Link>
+            <Link to="/admin" className="text-primary hover:underline">Admin</Link>
+            <Link to="/analytics" className="text-primary hover:underline">Analytics</Link>
+            <Link to="/history" className="text-primary hover:underline">History</Link>
+            <Link to="/settings" className="text-primary hover:underline">Settings</Link>
           </div>
         </div>
       </div>
