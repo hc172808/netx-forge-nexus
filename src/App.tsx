@@ -11,6 +11,13 @@ import Marketplace from "./pages/Marketplace";
 import TokenCreation from "./pages/TokenCreation";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Exchange from "./pages/Exchange";
+import Explorer from "./pages/Explorer";
+import Analytics from "./pages/Analytics";
+import History from "./pages/History";
+import Admin from "./pages/Admin";
+import AdminUsers from "./pages/AdminUsers";
+import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -22,18 +29,19 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/token-creation" element={<TokenCreation />} />
-            <Route path="/history" element={<Dashboard />} />
-            <Route path="/exchange" element={<Dashboard />} />
-            <Route path="/explorer" element={<Dashboard />} />
-            <Route path="/analytics" element={<Dashboard />} />
-            <Route path="/admin" element={<Dashboard />} />
-            <Route path="/admin/users" element={<Dashboard />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/exchange" element={<Exchange />} />
+            <Route path="/explorer" element={<Explorer />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
