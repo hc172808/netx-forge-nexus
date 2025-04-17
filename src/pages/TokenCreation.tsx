@@ -3,10 +3,11 @@ import { TokenCreationForm, TokenFormData } from "@/components/token/TokenCreati
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, CheckCircle2, Edit, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { isUserAdmin } from "@/services/walletService";
 
 // Sample list of user tokens
 const sampleUserTokens: TokenFormData[] = [
@@ -46,6 +47,12 @@ export default function TokenCreation() {
   const [userTokens, setUserTokens] = useState<TokenFormData[]>(sampleUserTokens);
   const [currentTab, setCurrentTab] = useState("create");
   const [editingToken, setEditingToken] = useState<TokenFormData | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Check if the user is admin
+  useEffect(() => {
+    setIsAdmin(isUserAdmin());
+  }, []);
   
   const handleTokenCreation = (tokenData: TokenFormData) => {
     console.log("Token data:", tokenData);
@@ -92,6 +99,11 @@ export default function TokenCreation() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Token Creation</h1>
+        {isAdmin && (
+          <div className="text-sm font-medium text-green-600 flex items-center bg-green-50 px-3 py-1 rounded-full">
+            <CheckCircle2 className="w-4 h-4 mr-1" /> Admin: You can set token creation fees
+          </div>
+        )}
       </div>
       
       <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
@@ -181,6 +193,13 @@ export default function TokenCreation() {
                         <span className="text-muted-foreground">Creator Reserve</span>
                         <span>{token.distributionType === "percentage" ? `${token.liquidityPercentage}%` : "Burn 99%"}</span>
                       </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Features</span>
+                        <span className="text-right">
+                          {token.isMintable ? "Mintable" : ""}
+                          {token.isMutable ? (token.isMintable ? ", Mutable" : "Mutable") : ""}
+                        </span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -216,15 +235,17 @@ export default function TokenCreation() {
               
               <div>
                 <h3 className="text-lg font-medium mb-2">4. Set Token Properties</h3>
-                <p className="text-muted-foreground">
-                  Configure whether your token is mintable, mutable, and if it has update or freeze authority.
-                </p>
-                <ul className="list-disc ml-6 mt-2 text-muted-foreground">
-                  <li>Mintable: Allows creation of additional tokens after initial supply</li>
-                  <li>Mutable: Allows metadata changes after creation</li>
-                  <li>Update Authority: Allows updating token details</li>
-                  <li>Freeze Authority: Allows freezing token accounts</li>
-                </ul>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground">
+                    Configure whether your token is mintable, mutable, and if it has update or freeze authority.
+                  </p>
+                  <ul className="list-disc ml-6 mt-2 text-muted-foreground">
+                    <li>Mintable: Allows creation of additional tokens after initial supply (Fee: 10 NETX)</li>
+                    <li>Mutable: Allows metadata changes after creation (Fee: 8 NETX)</li>
+                    <li>Update Authority: Allows updating token details (Fee: 5 NETX)</li>
+                    <li>Freeze Authority: Allows freezing token accounts (Fee: 12 NETX)</li>
+                  </ul>
+                </div>
               </div>
               
               <div>
@@ -288,6 +309,50 @@ export default function TokenCreation() {
                   NETX is the native platform coin and cannot be mined. It can only be obtained through buying or trading.
                   The admin sets prices for mintable, mutable, update authority, freeze authority, minting, and burning operations.
                 </p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Fee Structure</h3>
+                <div className="mt-4 bg-muted/20 p-4 rounded-md">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left pb-2">Feature</th>
+                        <th className="text-right pb-2">Fee</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="py-2">Token Creation</td>
+                        <td className="text-right">25 NETX</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Mintable Feature</td>
+                        <td className="text-right">10 NETX</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Mutable Feature</td>
+                        <td className="text-right">8 NETX</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Update Authority</td>
+                        <td className="text-right">5 NETX</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Freeze Authority</td>
+                        <td className="text-right">12 NETX</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Sending Tokens/Coins</td>
+                        <td className="text-right">0.5 NETX</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2">Trading Fee</td>
+                        <td className="text-right">0.2% of transaction</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

@@ -107,8 +107,8 @@ export default function Trading() {
                 </CardDescription>
               </div>
               <Badge 
-                variant={selectedPair.change24h >= 0 ? "outline" : "destructive"} 
-                className={selectedPair.change24h >= 0 ? "text-green-500 border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800" : ""}
+                variant={selectedPair.change24h >= 0 ? "default" : "destructive"} 
+                className={selectedPair.change24h >= 0 ? "bg-green-500 hover:bg-green-600" : ""}
               >
                 <span className="flex items-center gap-1">
                   {selectedPair.change24h >= 0 ? (
@@ -268,7 +268,7 @@ export default function Trading() {
                           <TableRow key={order.id}>
                             <TableCell>{order.pair}</TableCell>
                             <TableCell>
-                              <Badge variant={order.type === 'buy' ? 'outline' : 'destructive'} className={order.type === 'buy' ? 'bg-green-50 text-green-700 border-green-200' : ''}>
+                              <Badge variant={order.type === 'buy' ? 'default' : 'destructive'} className={order.type === 'buy' ? 'bg-green-500' : ''}>
                                 {order.type.toUpperCase()}
                               </Badge>
                             </TableCell>
@@ -327,7 +327,7 @@ export default function Trading() {
                           <TableRow key={order.id}>
                             <TableCell>{order.pair}</TableCell>
                             <TableCell>
-                              <Badge variant={order.type === 'buy' ? 'outline' : 'destructive'} className={order.type === 'buy' ? 'bg-green-50 text-green-700 border-green-200' : ''}>
+                              <Badge variant={order.type === 'buy' ? 'default' : 'destructive'} className={order.type === 'buy' ? 'bg-green-500' : ''}>
                                 {order.type.toUpperCase()}
                               </Badge>
                             </TableCell>
@@ -335,7 +335,7 @@ export default function Trading() {
                             <TableCell>{order.amount}</TableCell>
                             <TableCell>{order.total}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              <Badge variant="default" className="bg-blue-500">
                                 {order.status.toUpperCase()}
                               </Badge>
                             </TableCell>

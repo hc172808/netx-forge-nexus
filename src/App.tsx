@@ -21,7 +21,8 @@ import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import NodeSetup from "./pages/NodeSetup";
 import Trading from "./pages/Trading";
-import { StrictMode } from "react";
+import { StrictMode, useEffect, useState } from "react";
+import { getActiveWallet } from "./services/walletService";
 
 // Initialize QueryClient outside of the component
 const queryClient = new QueryClient({
@@ -34,6 +35,14 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check if there's an active wallet
+  useEffect(() => {
+    const activeWallet = getActiveWallet();
+    setIsAuthenticated(!!activeWallet);
+  }, []);
+
   return (
     <StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -42,8 +51,8 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
+              <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <Register />} />
               <Route path="/logout" element={<Navigate to="/login" replace />} />
               
               <Route element={<Layout />}>
