@@ -1,11 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, ExternalLink, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { Copy, DollarSign, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { CashOutModal } from "./CashOutModal";
 
 interface WalletCardProps {
   address: string;
@@ -27,7 +28,15 @@ export function WalletCard({
   className,
 }: WalletCardProps) {
   const [showAddress, setShowAddress] = useState(false);
+  const [isCashOutModalOpen, setIsCashOutModalOpen] = useState(false);
+  const [showCashOut, setShowCashOut] = useState(false);
   const { toast } = useToast();
+  
+  useEffect(() => {
+    // Check if balance is over 100,000 to show Cash Out button
+    const numericBalance = parseFloat(balance.replace(/,/g, ''));
+    setShowCashOut(numericBalance >= 100000);
+  }, [balance]);
   
   const formatAddress = (address: string) => {
     if (!showAddress) {
@@ -112,7 +121,24 @@ export function WalletCard({
         >
           Receive
         </Button>
+        
+        {showCashOut && (
+          <Button 
+            className="flex-1 bg-green-600 hover:bg-green-700"
+            onClick={() => setIsCashOutModalOpen(true)}
+          >
+            <DollarSign className="h-4 w-4 mr-1" />
+            Cash Out
+          </Button>
+        )}
       </CardFooter>
+      
+      <CashOutModal 
+        open={isCashOutModalOpen} 
+        onOpenChange={setIsCashOutModalOpen}
+        balance={balance}
+        tokenSymbol={tokenSymbol}
+      />
     </Card>
   );
 }

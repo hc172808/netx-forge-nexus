@@ -6,9 +6,126 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Activity, ArrowRight, Check, CheckCheck, KeyRound, LogIn, Mail, ShieldCheck, User, Wallet } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { createWallet } from "@/services/walletService";
+import { toast } from "sonner";
 
 export default function Register() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+    agreeToTerms: false
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData({ ...formData, [id]: value });
+  };
+  
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData({ ...formData, agreeToTerms: checked });
+  };
+  
+  const validateForm = () => {
+    if (!formData.firstName || !formData.lastName) {
+      toast.error("Please enter your full name");
+      return false;
+    }
+    
+    if (!formData.email || !/^\S+@\S+\.\S+$/.test(formData.email)) {
+      toast.error("Please enter a valid email address");
+      return false;
+    }
+    
+    if (!formData.username || formData.username.length < 3) {
+      toast.error("Username must be at least 3 characters");
+      return false;
+    }
+    
+    if (!formData.password || formData.password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return false;
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return false;
+    }
+    
+    if (!formData.agreeToTerms) {
+      toast.error("You must agree to the Terms of Service");
+      return false;
+    }
+    
+    return true;
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    // Create a wallet for the user (this happens in localStorage)
+    const walletName = `${formData.firstName} ${formData.lastName}'s Wallet`;
+    const walletResult = createWallet('secret-phrase', formData.password, walletName);
+    
+    if (walletResult) {
+      toast.success("Account created successfully! Redirecting to dashboard...");
+      
+      // Store user profile data (in a real app, this would be in a database)
+      const userData = {
+        id: walletResult.id,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        username: formData.username,
+        isVerified: false,
+        idCardUploaded: false,
+        proofOfAddressUploaded: false,
+        walletId: walletResult.id
+      };
+      
+      localStorage.setItem('user-profile-' + walletResult.id, JSON.stringify(userData));
+      
+      // Wait a moment to show the success message before redirecting
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+    } else {
+      toast.error("Failed to create account. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Check if password meets requirements
+  const passwordRequirements = [
+    { 
+      check: formData.password.length >= 8, 
+      text: "At least 8 characters" 
+    },
+    { 
+      check: /[A-Z]/.test(formData.password), 
+      text: "At least one uppercase letter" 
+    },
+    { 
+      check: /[0-9]/.test(formData.password), 
+      text: "At least one number" 
+    },
+    { 
+      check: /[^A-Za-z0-9]/.test(formData.password), 
+      text: "At least one special character" 
+    }
+  ];
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md px-4">
@@ -26,47 +143,75 @@ export default function Register() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="John" />
+                  <Input 
+                    id="firstName" 
+                    placeholder="John" 
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Doe" />
+                  <Input 
+                    id="lastName" 
+                    placeholder="Doe" 
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="john@example.com" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="john@example.com" 
+                  value={formData.email}
+                  onChange={handleInputChange}
+                />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
-                <Input id="username" placeholder="johndoe" />
+                <Input 
+                  id="username" 
+                  placeholder="johndoe" 
+                  value={formData.username}
+                  onChange={handleInputChange}
+                />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="Create a strong password" />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="Create a strong password" 
+                  value={formData.password}
+                  onChange={handleInputChange}
+                />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input id="confirmPassword" type="password" placeholder="Confirm your password" />
+                <Input 
+                  id="confirmPassword" 
+                  type="password" 
+                  placeholder="Confirm your password" 
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                />
               </div>
               
               <div className="bg-secondary/10 rounded-lg p-3 space-y-3">
                 <div className="text-sm font-medium">Password Requirements:</div>
                 <div className="space-y-2 text-xs">
-                  {[
-                    { check: true, text: "At least 8 characters" },
-                    { check: true, text: "At least one uppercase letter" },
-                    { check: false, text: "At least one number" },
-                    { check: false, text: "At least one special character" }
-                  ].map((req, index) => (
+                  {passwordRequirements.map((req, index) => (
                     <div key={index} className="flex items-center gap-2">
                       {req.check ? (
                         <Check className="h-3.5 w-3.5 text-green-500" />
@@ -82,7 +227,11 @@ export default function Register() {
               </div>
               
               <div className="flex items-start space-x-2 pt-2">
-                <Checkbox id="terms" />
+                <Checkbox 
+                  id="terms" 
+                  checked={formData.agreeToTerms}
+                  onCheckedChange={handleCheckboxChange}
+                />
                 <div className="grid gap-1.5 leading-none">
                   <label
                     htmlFor="terms"
@@ -93,8 +242,8 @@ export default function Register() {
                 </div>
               </div>
               
-              <Button type="submit" className="w-full">
-                Create Account
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Creating Account..." : "Create Account"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </form>
