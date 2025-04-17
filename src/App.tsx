@@ -19,46 +19,59 @@ import Admin from "./pages/Admin";
 import AdminUsers from "./pages/AdminUsers";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
+import { StrictMode } from "react";
 
-const queryClient = new QueryClient();
+// Initialize QueryClient outside of the component
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/logout" element={<Navigate to="/login" replace />} />
-          
-          <Route element={<Layout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/wallet" element={<Wallet />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/token-creation" element={<TokenCreation />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/exchange" element={<Exchange />} />
-            <Route path="/explorer" element={<Explorer />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
-            {/* Redirects for common typos */}
-            <Route path="/users" element={<Navigate to="/admin/users" replace />} />
-            <Route path="/tokens" element={<Navigate to="/marketplace" replace />} />
-            <Route path="/create-token" element={<Navigate to="/token-creation" replace />} />
-            <Route path="/profile" element={<Navigate to="/wallet" replace />} />
-            <Route path="/chart" element={<Navigate to="/analytics" replace />} />
-            <Route path="/transactions" element={<Navigate to="/history" replace />} />
-          </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/logout" element={<Navigate to="/login" replace />} />
+              
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/wallet" element={<Wallet />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/token-creation" element={<TokenCreation />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/exchange" element={<Exchange />} />
+                <Route path="/explorer" element={<Explorer />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
+                {/* Redirects for common typos */}
+                <Route path="/users" element={<Navigate to="/admin/users" replace />} />
+                <Route path="/tokens" element={<Navigate to="/marketplace" replace />} />
+                <Route path="/create-token" element={<Navigate to="/token-creation" replace />} />
+                <Route path="/profile" element={<Navigate to="/wallet" replace />} />
+                <Route path="/chart" element={<Navigate to="/analytics" replace />} />
+                <Route path="/transactions" element={<Navigate to="/history" replace />} />
+              </Route>
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </StrictMode>
+  );
+};
 
 export default App;
