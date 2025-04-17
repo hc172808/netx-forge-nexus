@@ -1,144 +1,116 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, DollarSign, ExternalLink, Eye, EyeOff } from "lucide-react";
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { CashOutModal } from "./CashOutModal";
+import { Copy, CreditCard, Info, Send, Wallet } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface WalletCardProps {
   address: string;
   balance: string;
   tokenSymbol: string;
-  onChange?: () => void;
-  onSend?: () => void;
-  onReceive?: () => void;
-  className?: string;
+  onSend: () => void;
+  onReceive: () => void;
+  onCashOut?: () => void;
 }
 
-export function WalletCard({
-  address,
-  balance,
-  tokenSymbol,
-  onChange,
-  onSend,
+export function WalletCard({ 
+  address, 
+  balance, 
+  tokenSymbol, 
+  onSend, 
   onReceive,
-  className,
+  onCashOut
 }: WalletCardProps) {
-  const [showAddress, setShowAddress] = useState(false);
-  const [isCashOutModalOpen, setIsCashOutModalOpen] = useState(false);
-  const [showCashOut, setShowCashOut] = useState(false);
-  const { toast } = useToast();
+  const [isAddressCopied, setIsAddressCopied] = useState(false);
   
-  useEffect(() => {
-    // Check if balance is over 100,000 to show Cash Out button
-    const numericBalance = parseFloat(balance.replace(/,/g, ''));
-    setShowCashOut(numericBalance >= 100000);
-  }, [balance]);
-  
-  const formatAddress = (address: string) => {
-    if (!showAddress) {
-      return address.substring(0, 6) + "..." + address.substring(address.length - 4);
-    }
-    return address;
-  };
-  
-  const copyToClipboard = () => {
+  const copyAddressToClipboard = () => {
     navigator.clipboard.writeText(address);
-    toast({
-      title: "Address Copied",
-      description: "Wallet address has been copied to clipboard.",
-    });
+    setIsAddressCopied(true);
+    toast.success("Address copied to clipboard");
+    
+    setTimeout(() => {
+      setIsAddressCopied(false);
+    }, 2000);
   };
 
+  // Format address for display
+  const formattedAddress = `${address.substring(0, 8)}...${address.substring(address.length - 8)}`;
+  
   return (
-    <Card className={cn("overflow-hidden", className)}>
-      <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10 pb-8">
-        <CardTitle className="flex justify-between">
-          <span>My NETX Wallet</span>
-          {onChange && (
-            <Button variant="ghost" size="sm" onClick={onChange}>
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Change
-            </Button>
-          )}
+    <Card className="shadow-md">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center space-x-2">
+          <Wallet className="h-5 w-5 text-primary" />
+          <span>My Wallet</span>
         </CardTitle>
-        <CardDescription>Manage your assets</CardDescription>
+        <CardDescription>Manage your funds securely</CardDescription>
       </CardHeader>
-      <CardContent className="p-6 -mt-6">
-        <div className="bg-card border rounded-lg p-4 shadow-lg">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-muted-foreground">Wallet Address</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8" 
-              onClick={() => setShowAddress(!showAddress)}
-            >
-              {showAddress ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </Button>
+      <CardContent className="pb-3">
+        <div className="space-y-4">
+          <div className="flex flex-col space-y-1.5">
+            <div className="text-sm font-medium text-muted-foreground">Address</div>
+            <div className="flex items-center">
+              <div className="text-sm font-medium mr-2 truncate">{formattedAddress}</div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6" 
+                onClick={copyAddressToClipboard}
+              >
+                <Copy className={`h-3.5 w-3.5 ${isAddressCopied ? 'text-green-500' : 'text-muted-foreground'}`} />
+                <span className="sr-only">Copy address</span>
+              </Button>
+            </div>
           </div>
           
-          <div className="flex items-center gap-2 mb-6">
-            <code className="font-mono text-sm bg-secondary/50 px-2 py-1 rounded flex-1 overflow-hidden text-ellipsis">
-              {formatAddress(address)}
-            </code>
+          <div className="space-y-1.5">
+            <div className="text-sm font-medium text-muted-foreground">Balance</div>
+            <div className="flex items-end">
+              <div className="text-2xl font-bold">{balance}</div>
+              <div className="ml-1 text-sm font-medium">{tokenSymbol}</div>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Estimated value: ${(parseFloat(balance.replace(/,/g, '')) * 0.0845).toFixed(2)} USD
+            </div>
+          </div>
+          
+          <div className="pt-2 grid grid-cols-2 gap-2">
+            <Button 
+              variant="default" 
+              className="w-full" 
+              onClick={onSend}
+            >
+              <Send className="mr-2 h-4 w-4" />
+              Send
+            </Button>
             <Button 
               variant="outline" 
-              size="icon" 
-              className="h-8 w-8" 
-              onClick={copyToClipboard}
+              className="w-full" 
+              onClick={onReceive}
             >
-              <Copy className="h-4 w-4" />
+              <CreditCard className="mr-2 h-4 w-4" />
+              Receive
             </Button>
           </div>
           
-          <div className="text-sm text-muted-foreground mb-1">
-            Balance
-          </div>
-          <div className="text-3xl font-bold mb-2">
-            {balance} <span className="text-lg font-medium">{tokenSymbol}</span>
-          </div>
+          {onCashOut && (
+            <Button 
+              variant="secondary" 
+              className="w-full" 
+              onClick={onCashOut}
+            >
+              <Info className="mr-2 h-4 w-4" />
+              Cash Out
+            </Button>
+          )}
         </div>
       </CardContent>
-      <CardFooter className="flex gap-2 px-6">
-        <Button 
-          className="flex-1 bg-primary"
-          onClick={onSend}
-        >
-          Send
+      <CardFooter className="pt-0">
+        <Button variant="link" className="p-0 h-auto text-xs w-full text-muted-foreground">
+          View transaction history
         </Button>
-        <Button 
-          variant="outline" 
-          className="flex-1"
-          onClick={onReceive}
-        >
-          Receive
-        </Button>
-        
-        {showCashOut && (
-          <Button 
-            className="flex-1 bg-green-600 hover:bg-green-700"
-            onClick={() => setIsCashOutModalOpen(true)}
-          >
-            <DollarSign className="h-4 w-4 mr-1" />
-            Cash Out
-          </Button>
-        )}
       </CardFooter>
-      
-      <CashOutModal 
-        open={isCashOutModalOpen} 
-        onOpenChange={setIsCashOutModalOpen}
-        balance={balance}
-        tokenSymbol={tokenSymbol}
-      />
     </Card>
   );
 }

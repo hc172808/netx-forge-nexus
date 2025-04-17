@@ -3,13 +3,16 @@ import { StatCard } from "@/components/ui/stat-card";
 import { WalletCard } from "@/components/wallet/WalletCard";
 import { SendTokenModal } from "@/components/wallet/SendTokenModal";
 import { ReceiveTokenModal } from "@/components/wallet/ReceiveTokenModal";
+import { CashOutModal } from "@/components/wallet/CashOutModal";
+import { DownloadSection } from "@/components/downloads/DownloadSection";
 import { Activity, BarChart4, Coins, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { getActiveWallet } from "@/services/walletService";
 
 const dummyWalletData = {
   address: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t",
@@ -121,6 +124,18 @@ const dummyTopTokens = [
 export default function Dashboard() {
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [receiveModalOpen, setReceiveModalOpen] = useState(false);
+  const [cashOutModalOpen, setCashOutModalOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(dummyWalletData.balance);
+  const [showCashOut, setShowCashOut] = useState(false);
+  
+  useEffect(() => {
+    // Check if user has enough balance to show cash out button (100,000 NETX)
+    const balance = parseFloat(walletBalance.replace(/,/g, ''));
+    setShowCashOut(balance >= 100000);
+    
+    // In a real app, you would also check admin settings to see if cash out is enabled
+    // checkAdminSettings();
+  }, [walletBalance]);
   
   const handleSendToken = (address: string, amount: string) => {
     console.log("Sending", amount, "to", address);
@@ -145,6 +160,8 @@ export default function Dashboard() {
               />
             ))}
           </div>
+          
+          <DownloadSection />
           
           <Card>
             <CardHeader>
@@ -234,10 +251,11 @@ export default function Dashboard() {
         <div className="w-full md:w-80">
           <WalletCard
             address={dummyWalletData.address}
-            balance={dummyWalletData.balance}
+            balance={walletBalance}
             tokenSymbol={dummyWalletData.tokenSymbol}
             onSend={() => setSendModalOpen(true)}
             onReceive={() => setReceiveModalOpen(true)}
+            onCashOut={showCashOut ? () => setCashOutModalOpen(true) : undefined}
           />
         </div>
       </div>
@@ -245,7 +263,7 @@ export default function Dashboard() {
       <SendTokenModal
         open={sendModalOpen}
         onOpenChange={setSendModalOpen}
-        availableBalance={dummyWalletData.balance.replace(/,/g, '')}
+        availableBalance={walletBalance.replace(/,/g, '')}
         tokenSymbol={dummyWalletData.tokenSymbol}
         onSend={handleSendToken}
       />
@@ -256,6 +274,15 @@ export default function Dashboard() {
         walletAddress={dummyWalletData.address}
         tokenSymbol={dummyWalletData.tokenSymbol}
       />
+      
+      {showCashOut && (
+        <CashOutModal
+          open={cashOutModalOpen}
+          onOpenChange={setCashOutModalOpen}
+          balance={walletBalance}
+          tokenSymbol={dummyWalletData.tokenSymbol}
+        />
+      )}
     </div>
   );
 }
