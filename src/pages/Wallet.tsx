@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,7 +24,7 @@ import {
   importWalletWithSeedPhrase, 
   setActiveWallet,
   validateSeedPhrase,
-  Wallet
+  type Wallet as WalletType
 } from "@/services/walletService";
 import { toast } from "sonner";
 
@@ -116,29 +115,25 @@ export default function Wallet() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [walletName, setWalletName] = useState("");
-  const [activeWallet, setActiveWalletState] = useState<Wallet | null>(null);
+  const [activeWallet, setActiveWalletState] = useState<WalletType | null>(null);
   const [walletBalance, setWalletBalance] = useState("0.00");
-  const [creationType, setCreationType] = useState<'secret-phrase' | 'swift'>('secret-phrase');
-  const [walletList, setWalletList] = useState<Wallet[]>([]);
+  const [creationType, setCreationType] = useState<'secret-phrase' | 'swift' | 'choose'>('choose');
+  const [walletList, setWalletList] = useState<WalletType[]>([]);
   
-  // Load active wallet on component mount
   useEffect(() => {
     const wallet = getActiveWallet();
     setActiveWalletState(wallet);
     
-    // Get all wallets
     const wallets = getWallets();
     setWalletList(wallets);
     
     if (wallet) {
-      // Update balance
       getWalletBalance(wallet.address).then(balance => {
         setWalletBalance(balance);
       });
     }
   }, []);
   
-  // Handle wallet selection change
   const handleWalletChange = (walletId: string) => {
     setActiveWallet(walletId);
     const wallet = getWallets().find(w => w.id === walletId);
@@ -160,40 +155,32 @@ export default function Wallet() {
   };
   
   const createWalletWithSecretPhrase = () => {
-    // Check password length
     if (walletPassword.length < 8) {
       toast.error("Password must be at least 8 characters long");
       return;
     }
     
-    // Check password confirmation
     if (walletPassword !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
     
-    // Create wallet
     const newWallet = createWallet('secret-phrase', walletPassword, walletName);
     
     if (newWallet) {
-      // Show created wallet's seed phrase (in a real app you'd show this securely)
       const generatedSeedPhrase = seedPhrase || "Your seed phrase has been generated";
       
       toast.success("Wallet Created", {
         description: "New wallet created with Secret Phrase. Keep your password and seed phrase safe!",
       });
       
-      // Update wallet list
       setWalletList(getWallets());
       
-      // Set as active wallet
       setActiveWalletState(newWallet);
       setWalletBalance("0.00");
       
-      // Close modal
       setCreateWalletOpen(false);
       
-      // Reset form
       setWalletPassword("");
       setConfirmPassword("");
       setWalletName("");
@@ -204,19 +191,16 @@ export default function Wallet() {
   };
   
   const createWalletWithSwift = () => {
-    // Check password length
     if (walletPassword.length < 8) {
       toast.error("Password must be at least 8 characters long");
       return;
     }
     
-    // Check password confirmation
     if (walletPassword !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
     
-    // Create Swift wallet
     const newWallet = createWallet('swift', walletPassword, walletName);
     
     if (newWallet) {
@@ -224,17 +208,13 @@ export default function Wallet() {
         description: "New Swift Wallet created successfully.",
       });
       
-      // Update wallet list
       setWalletList(getWallets());
       
-      // Set as active wallet
       setActiveWalletState(newWallet);
       setWalletBalance("0.00");
       
-      // Close modal
       setCreateWalletOpen(false);
       
-      // Reset form
       setWalletPassword("");
       setConfirmPassword("");
       setWalletName("");
@@ -245,25 +225,21 @@ export default function Wallet() {
   
   const importWallet = (type: string) => {
     if (type === "phrase" && seedPhrase) {
-      // Validate seed phrase
       if (!validateSeedPhrase(seedPhrase)) {
         toast.error("Invalid seed phrase. Please check and try again.");
         return;
       }
       
-      // Check password length
       if (walletPassword.length < 8) {
         toast.error("Password must be at least 8 characters long");
         return;
       }
       
-      // Check password confirmation
       if (walletPassword !== confirmPassword) {
         toast.error("Passwords do not match");
         return;
       }
       
-      // Import wallet
       const newWallet = importWalletWithSeedPhrase(seedPhrase, walletPassword, walletName);
       
       if (newWallet) {
@@ -271,17 +247,13 @@ export default function Wallet() {
           description: "Your wallet has been imported via seed phrase.",
         });
         
-        // Update wallet list
         setWalletList(getWallets());
         
-        // Set as active wallet
         setActiveWalletState(newWallet);
         setWalletBalance("0.00");
         
-        // Close modal
         setImportWalletOpen(false);
         
-        // Reset form
         setSeedPhrase("");
         setWalletPassword("");
         setConfirmPassword("");
@@ -298,10 +270,8 @@ export default function Wallet() {
         description: `Wallet ${walletAddress.substring(0, 8)}... added in view-only mode.`,
       });
       
-      // Close modal
       setImportWalletOpen(false);
       
-      // Reset form
       setWalletAddress("");
       setWalletName("");
     } else {

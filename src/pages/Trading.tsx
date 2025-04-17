@@ -1,359 +1,519 @@
 
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, ArrowDown, ArrowRight, ArrowUp, BarChart4, TrendingDown, TrendingUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeftRight, LineChart, TrendingUp } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-// Sample trading pairs
-const tradingPairs = [
-  { id: "netx-usdt", base: "NETX", quote: "USDT", price: 0.0845, change24h: 5.23 },
-  { id: "netx-eth", base: "NETX", quote: "ETH", price: 0.000052, change24h: 2.87 },
-  { id: "contx-netx", base: "CONTX", quote: "NETX", price: 0.952, change24h: -1.24 },
-  { id: "devx-netx", base: "DEVX", quote: "NETX", price: 0.325, change24h: 7.56 },
-  { id: "buildx-netx", base: "BUILDX", quote: "NETX", price: 0.187, change24h: -0.82 },
-];
-
-// Sample order history
-const orderHistory = [
-  { id: "1", pair: "NETX/USDT", type: "buy", price: 0.0842, amount: 1200, total: 101.04, status: "completed", date: "2025-04-16 14:32" },
-  { id: "2", pair: "NETX/ETH", type: "sell", price: 0.000051, amount: 500, total: 0.0255, status: "completed", date: "2025-04-15 09:15" },
-  { id: "3", pair: "CONTX/NETX", type: "buy", price: 0.945, amount: 800, total: 756, status: "completed", date: "2025-04-14 17:22" },
-  { id: "4", pair: "NETX/USDT", type: "sell", price: 0.0838, amount: 350, total: 29.33, status: "completed", date: "2025-04-13 11:05" },
-];
-
-// Sample open orders
-const openOrders = [
-  { id: "5", pair: "NETX/USDT", type: "buy", price: 0.0830, amount: 1500, total: 124.5, date: "2025-04-17 08:45" },
-  { id: "6", pair: "DEVX/NETX", type: "sell", price: 0.330, amount: 600, total: 198, date: "2025-04-17 10:12" },
+const tokens = [
+  {
+    id: "1",
+    name: "NETX Coin",
+    symbol: "NETX",
+    price: 0.0845,
+    change: "+2.5%",
+    volume: "$1.2M",
+    marketCap: "$8.4M",
+    logo: "https://placehold.co/200x200/4c54e8/ffffff.png?text=NETX",
+  },
+  {
+    id: "2",
+    name: "Contractor Token",
+    symbol: "CONTX",
+    price: 0.0820,
+    change: "-0.8%",
+    volume: "$950K",
+    marketCap: "$6.1M",
+    logo: "https://placehold.co/200x200/33a3ee/ffffff.png?text=CONTX",
+  },
+  {
+    id: "3",
+    name: "Developer Token",
+    symbol: "DEVX",
+    price: 0.0250,
+    change: "+5.3%",
+    volume: "$560K",
+    marketCap: "$2.5M",
+    logo: "https://placehold.co/200x200/42c9af/ffffff.png?text=DEVX",
+  },
+  {
+    id: "4",
+    name: "Network Token",
+    symbol: "NTX",
+    price: 0.1250,
+    change: "+1.2%",
+    volume: "$1.5M",
+    marketCap: "$12.5M",
+    logo: "https://placehold.co/200x200/e84c4c/ffffff.png?text=NTX",
+  },
+  {
+    id: "5",
+    name: "Governance Token",
+    symbol: "GOVX",
+    price: 0.0750,
+    change: "-1.5%",
+    volume: "$850K",
+    marketCap: "$7.5M",
+    logo: "https://placehold.co/200x200/e84ce8/ffffff.png?text=GOVX",
+  },
 ];
 
 export default function Trading() {
-  const [selectedPair, setSelectedPair] = useState(tradingPairs[0]);
-  const [orderType, setOrderType] = useState<"buy" | "sell">("buy");
-  const [amount, setAmount] = useState("");
-  const [price, setPrice] = useState(selectedPair.price.toString());
+  const [fromToken, setFromToken] = useState(tokens[0]);
+  const [toToken, setToToken] = useState(tokens[1]);
+  const [fromAmount, setFromAmount] = useState<string>("");
+  const [toAmount, setToAmount] = useState<string>("");
+  const [slippage, setSlippage] = useState<string>("0.5");
+  const [orderType, setOrderType] = useState<string>("market");
+  const [limitPrice, setLimitPrice] = useState<string>("");
   
-  // Calculate total based on amount and price
-  const total = parseFloat(amount) * parseFloat(price) || 0;
+  // Constants
+  const TRADING_FEE = 0.002; // 0.2% fee
   
-  // Fee calculation (0.2% trading fee)
-  const fee = total * 0.002;
+  // Calculate receive amount based on input amount, prices, and fee
+  const calculateReceiveAmount = (amount: string, inputToken: typeof tokens[0], outputToken: typeof tokens[0]) => {
+    if (!amount || isNaN(parseFloat(amount))) return "";
+    
+    const inputAmount = parseFloat(amount);
+    const inputValue = inputAmount * inputToken.price;
+    const outputAmount = inputValue / outputToken.price;
+    
+    // Apply trading fee
+    const amountAfterFee = outputAmount * (1 - TRADING_FEE);
+    
+    return amountAfterFee.toFixed(6);
+  };
   
-  // Function to handle trading pair change
-  const handlePairChange = (pairId: string) => {
-    const pair = tradingPairs.find(p => p.id === pairId);
-    if (pair) {
-      setSelectedPair(pair);
-      setPrice(pair.price.toString());
+  // Handle input amount change
+  const handleFromAmountChange = (value: string) => {
+    setFromAmount(value);
+    setToAmount(calculateReceiveAmount(value, fromToken, toToken));
+  };
+  
+  // Handle token swap button
+  const handleSwapTokens = () => {
+    const temp = fromToken;
+    setFromToken(toToken);
+    setToToken(temp);
+    
+    // Recalculate amounts
+    if (fromAmount) {
+      setToAmount(calculateReceiveAmount(fromAmount, toToken, fromToken));
     }
   };
   
-  // Function to handle order submission
-  const handleSubmitOrder = () => {
-    if (!amount || parseFloat(amount) <= 0) {
+  // Handle trade execution
+  const handleTrade = () => {
+    if (!fromAmount || parseFloat(fromAmount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
     
-    if (!price || parseFloat(price) <= 0) {
-      toast.error("Please enter a valid price");
-      return;
-    }
+    const calculatedAmount = calculateReceiveAmount(fromAmount, fromToken, toToken);
     
-    // Show payment confirmation dialog
-    if (!window.confirm(`This trading operation will cost ${fee.toFixed(6)} ${orderType === "buy" ? selectedPair.quote : selectedPair.base} in fees. Do you want to proceed?`)) {
-      return;
-    }
-    
-    // Process the order
-    toast.success(`${orderType.toUpperCase()} order placed successfully`, {
-      description: `${amount} ${orderType === "buy" ? selectedPair.base : selectedPair.quote} at ${price} ${selectedPair.quote}`
+    toast.success("Trade Executed", {
+      description: `Successfully swapped ${fromAmount} ${fromToken.symbol} for ${calculatedAmount} ${toToken.symbol}`,
     });
     
     // Reset form
-    setAmount("");
-  };
-  
-  // Function to handle order cancellation
-  const handleCancelOrder = (orderId: string) => {
-    toast.success(`Order ${orderId} cancelled successfully`);
+    setFromAmount("");
+    setToAmount("");
   };
   
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 container mx-auto max-w-6xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <h1 className="text-2xl font-bold">Trading</h1>
+        <div className="flex gap-2 mt-2 md:mt-0">
+          <Button variant="default" size="sm">
+            <LineChart className="h-4 w-4 mr-2" />
+            Charts
+          </Button>
+          <Button variant="outline" size="sm">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Trading History
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Trading Chart Area */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl">
-                  {selectedPair.base}/{selectedPair.quote}
-                </CardTitle>
-                <CardDescription>
-                  Current Price: {selectedPair.price} {selectedPair.quote}
-                </CardDescription>
-              </div>
-              <Badge 
-                variant={selectedPair.change24h >= 0 ? "default" : "destructive"} 
-                className={selectedPair.change24h >= 0 ? "bg-green-500 hover:bg-green-600" : ""}
-              >
-                <span className="flex items-center gap-1">
-                  {selectedPair.change24h >= 0 ? (
-                    <TrendingUp className="h-3 w-3" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3" />
-                  )}
-                  {selectedPair.change24h >= 0 ? "+" : ""}{selectedPair.change24h.toFixed(2)}%
-                </span>
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="p-6 h-[300px] bg-muted/20 rounded-md flex items-center justify-center">
-              <div className="text-center">
-                <BarChart4 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">Trading chart will be displayed here</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Order Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Place Order</CardTitle>
-            <CardDescription>
-              Trading fee: 0.2%
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="pair">Trading Pair</Label>
-                <Select value={selectedPair.id} onValueChange={handlePairChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select trading pair" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tradingPairs.map((pair) => (
-                      <SelectItem key={pair.id} value={pair.id}>
-                        {pair.base}/{pair.quote}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <div className="flex rounded-md overflow-hidden mb-2">
-                  <Button 
-                    type="button" 
-                    className={`flex-1 rounded-none ${orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-muted'}`}
-                    onClick={() => setOrderType('buy')}
-                  >
-                    BUY
-                  </Button>
-                  <Button 
-                    type="button" 
-                    className={`flex-1 rounded-none ${orderType === 'sell' ? 'bg-red-600 hover:bg-red-700' : 'bg-muted'}`}
-                    onClick={() => setOrderType('sell')}
-                  >
-                    SELL
-                  </Button>
-                </div>
-                
-                <Alert variant="outline" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Trading Requires Payment</AlertTitle>
-                  <AlertDescription>
-                    Trading operations cost {fee.toFixed(6)} {orderType === "buy" ? selectedPair.quote : selectedPair.base} in fees.
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="price">Price ({selectedPair.quote})</Label>
-                    <Input 
-                      id="price" 
-                      type="number"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      step="0.000001"
-                      min="0"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="amount">Amount ({selectedPair.base})</Label>
-                    <Input 
-                      id="amount" 
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      step="0.000001"
-                      min="0"
-                    />
-                  </div>
-                  
-                  <div className="pt-2">
-                    <div className="flex justify-between text-sm pb-1">
-                      <span>Total</span>
-                      <span>{total.toFixed(6)} {selectedPair.quote}</span>
+        <div className="col-span-1 lg:col-span-2">
+          <Tabs defaultValue="swap" className="w-full">
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="swap">Swap</TabsTrigger>
+              <TabsTrigger value="limit">Limit Order</TabsTrigger>
+              <TabsTrigger value="pool">Liquidity Pool</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="swap">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Swap Tokens</CardTitle>
+                  <CardDescription>
+                    Exchange tokens instantly at the current market price
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fromToken">From</Label>
+                      <div className="flex gap-2">
+                        <select 
+                          id="fromToken" 
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          value={fromToken.id}
+                          onChange={(e) => {
+                            const token = tokens.find(t => t.id === e.target.value);
+                            if (token) {
+                              setFromToken(token);
+                              if (fromAmount) {
+                                setToAmount(calculateReceiveAmount(fromAmount, token, toToken));
+                              }
+                            }
+                          }}
+                        >
+                          {tokens.map((token) => (
+                            <option 
+                              key={token.id} 
+                              value={token.id}
+                              disabled={token.id === toToken.id}
+                            >
+                              {token.symbol} - {token.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-sm pb-1">
-                      <span>Fee (0.2%)</span>
-                      <span>{fee.toFixed(6)} {orderType === "buy" ? selectedPair.quote : selectedPair.base}</span>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="fromAmount">Amount</Label>
+                      <Input 
+                        id="fromAmount" 
+                        type="number" 
+                        placeholder="0.00"
+                        value={fromAmount}
+                        onChange={(e) => handleFromAmountChange(e.target.value)}
+                      />
+                      <div className="text-sm text-muted-foreground flex justify-between">
+                        <span>Price: ${fromToken.price.toFixed(4)}</span>
+                        <span>Fee: 0.2%</span>
+                      </div>
                     </div>
+                    
+                    <div className="flex justify-center my-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={handleSwapTokens}
+                        className="rounded-full h-8 w-8"
+                      >
+                        <ArrowLeftRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="toToken">To</Label>
+                      <div className="flex gap-2">
+                        <select 
+                          id="toToken" 
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          value={toToken.id}
+                          onChange={(e) => {
+                            const token = tokens.find(t => t.id === e.target.value);
+                            if (token) {
+                              setToToken(token);
+                              if (fromAmount) {
+                                setToAmount(calculateReceiveAmount(fromAmount, fromToken, token));
+                              }
+                            }
+                          }}
+                        >
+                          {tokens.map((token) => (
+                            <option 
+                              key={token.id} 
+                              value={token.id}
+                              disabled={token.id === fromToken.id}
+                            >
+                              {token.symbol} - {token.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="toAmount">You Receive</Label>
+                      <Input 
+                        id="toAmount" 
+                        type="text" 
+                        placeholder="0.00"
+                        value={toAmount}
+                        readOnly 
+                        className="bg-muted"
+                      />
+                      <div className="text-sm text-muted-foreground">
+                        Price: ${toToken.price.toFixed(4)}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="slippage">Slippage Tolerance</Label>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant={slippage === "0.1" ? "default" : "outline"} 
+                          size="sm"
+                          onClick={() => setSlippage("0.1")}
+                        >
+                          0.1%
+                        </Button>
+                        <Button 
+                          variant={slippage === "0.5" ? "default" : "outline"} 
+                          size="sm"
+                          onClick={() => setSlippage("0.5")}
+                        >
+                          0.5%
+                        </Button>
+                        <Button 
+                          variant={slippage === "1.0" ? "default" : "outline"} 
+                          size="sm"
+                          onClick={() => setSlippage("1.0")}
+                        >
+                          1.0%
+                        </Button>
+                        <Input 
+                          type="number" 
+                          placeholder="Custom" 
+                          className="max-w-[100px]"
+                          value={!["0.1", "0.5", "1.0"].includes(slippage) ? slippage : ""}
+                          onChange={(e) => setSlippage(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button className="w-full" onClick={handleTrade}>
+                      Swap {fromToken.symbol} to {toToken.symbol}
+                    </Button>
                   </div>
-                  
-                  <Button 
-                    className={`w-full ${orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
-                    onClick={handleSubmitOrder}
-                  >
-                    {orderType === 'buy' ? 'Buy' : 'Sell'} {selectedPair.base}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Order History and Open Orders */}
-      <div>
-        <Tabs defaultValue="open-orders">
-          <TabsList className="mb-4">
-            <TabsTrigger value="open-orders">Open Orders</TabsTrigger>
-            <TabsTrigger value="order-history">Order History</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="open-orders">
-            <Card>
-              <CardHeader>
-                <CardTitle>Open Orders</CardTitle>
-                <CardDescription>
-                  Your active trading orders
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {openOrders.length > 0 ? (
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Pair</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Total</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {openOrders.map((order) => (
-                          <TableRow key={order.id}>
-                            <TableCell>{order.pair}</TableCell>
-                            <TableCell>
-                              <Badge variant={order.type === 'buy' ? 'default' : 'destructive'} className={order.type === 'buy' ? 'bg-green-500' : ''}>
-                                {order.type.toUpperCase()}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{order.price}</TableCell>
-                            <TableCell>{order.amount}</TableCell>
-                            <TableCell>{order.total}</TableCell>
-                            <TableCell>{order.date}</TableCell>
-                            <TableCell>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleCancelOrder(order.id)}
-                              >
-                                Cancel
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="limit">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Limit Order</CardTitle>
+                  <CardDescription>
+                    Set a price to buy or sell tokens automatically
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    {/* Similar to swap but with limit price input */}
+                    <div className="space-y-2">
+                      <Label htmlFor="orderType">Order Type</Label>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant={orderType === "market" ? "default" : "outline"} 
+                          className="flex-1"
+                          onClick={() => setOrderType("market")}
+                        >
+                          Market
+                        </Button>
+                        <Button 
+                          variant={orderType === "limit" ? "default" : "outline"} 
+                          className="flex-1"
+                          onClick={() => setOrderType("limit")}
+                        >
+                          Limit
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* From Token */}
+                    <div className="space-y-2">
+                      <Label htmlFor="limitFromToken">From</Label>
+                      <select 
+                        id="limitFromToken" 
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {tokens.map((token) => (
+                          <option key={token.id} value={token.id}>
+                            {token.symbol} - {token.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Input 
+                        type="number" 
+                        placeholder="Amount" 
+                      />
+                    </div>
+                    
+                    {/* To Token */}
+                    <div className="space-y-2">
+                      <Label htmlFor="limitToToken">To</Label>
+                      <select 
+                        id="limitToToken" 
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {tokens.map((token) => (
+                          <option key={token.id} value={token.id}>
+                            {token.symbol} - {token.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* Limit Price - only show if limit order type */}
+                    {orderType === "limit" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="limitPrice">Limit Price</Label>
+                        <Input 
+                          id="limitPrice" 
+                          type="number" 
+                          placeholder="0.00"
+                          value={limitPrice}
+                          onChange={(e) => setLimitPrice(e.target.value)}
+                        />
+                        <div className="text-sm text-muted-foreground">
+                          Current price: $0.0845
+                        </div>
+                      </div>
+                    )}
+                    
+                    <Button className="w-full">
+                      Place {orderType} Order
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="pool">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Liquidity Pool</CardTitle>
+                  <CardDescription>
+                    Add tokens to liquidity pools and earn trading fees
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h3 className="font-medium">My Liquidity Positions</h3>
+                      
+                      <div className="text-center py-8 text-muted-foreground">
+                        You don't have any active liquidity positions
+                      </div>
+                      
+                      <Button className="w-full">
+                        Add Liquidity
+                      </Button>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <h3 className="font-medium mb-4">Available Pools</h3>
+                      
+                      <div className="space-y-2">
+                        {[
+                          { pair: "NETX/CONTX", tvl: "$240,000", apy: "24%" },
+                          { pair: "NETX/DEVX", tvl: "$180,000", apy: "18%" },
+                          { pair: "CONTX/DEVX", tvl: "$120,000", apy: "15%" }
+                        ].map((pool, index) => (
+                          <div key={index} className="flex justify-between items-center p-3 border rounded">
+                            <div>
+                              <div className="font-medium">{pool.pair}</div>
+                              <div className="text-sm text-muted-foreground">TVL: {pool.tvl}</div>
+                            </div>
+                            <div>
+                              <div className="text-green-500 font-medium">{pool.apy} APY</div>
+                              <Button size="sm" variant="outline" className="mt-1">
+                                Add
                               </Button>
-                            </TableCell>
-                          </TableRow>
+                            </div>
+                          </div>
                         ))}
-                      </TableBody>
-                    </Table>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">No open orders</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+        
+        <div className="col-span-1 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Market Overview</CardTitle>
+              <CardDescription>
+                Latest prices for NETX tokens
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {tokens.map((token) => (
+                  <div key={token.id} className="flex justify-between items-center border-b pb-2 last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-2">
+                      <img src={token.logo} alt={token.symbol} className="w-6 h-6 rounded-full" />
+                      <div>
+                        <div className="font-medium">{token.symbol}</div>
+                        <div className="text-xs text-muted-foreground">{token.name}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div>${token.price.toFixed(4)}</div>
+                      <div className={`text-xs ${token.change.startsWith('+') ? 'text-green-500' : 'text-red-500'}`}>
+                        {token.change}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
           
-          <TabsContent value="order-history">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order History</CardTitle>
-                <CardDescription>
-                  Your past trading activity
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {orderHistory.length > 0 ? (
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Pair</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Total</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Date</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {orderHistory.map((order) => (
-                          <TableRow key={order.id}>
-                            <TableCell>{order.pair}</TableCell>
-                            <TableCell>
-                              <Badge variant={order.type === 'buy' ? 'default' : 'destructive'} className={order.type === 'buy' ? 'bg-green-500' : ''}>
-                                {order.type.toUpperCase()}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{order.price}</TableCell>
-                            <TableCell>{order.amount}</TableCell>
-                            <TableCell>{order.total}</TableCell>
-                            <TableCell>
-                              <Badge variant="default" className="bg-blue-500">
-                                {order.status.toUpperCase()}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{order.date}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+          <Card>
+            <CardHeader>
+              <CardTitle>Trading Stats</CardTitle>
+              <CardDescription>
+                24h network statistics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">24h Volume</div>
+                    <div className="text-xl font-bold">$2.34M</div>
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">No order history</p>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">Transactions</div>
+                    <div className="text-xl font-bold">12,540</div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">Active Traders</div>
+                    <div className="text-xl font-bold">1,245</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">Trading Fee</div>
+                    <div className="text-xl font-bold">0.2%</div>
+                  </div>
+                </div>
+                
+                <div className="pt-2 border-t">
+                  <div className="text-sm text-muted-foreground mb-2">Network Status</div>
+                  <div className="flex gap-2 items-center">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div>Operational - All systems running</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
