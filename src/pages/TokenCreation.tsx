@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 
 // Sample list of user tokens
-const sampleUserTokens = [
+const sampleUserTokens: TokenFormData[] = [
   { 
     name: "NETX Governance", 
     symbol: "NXTG", 
@@ -20,7 +20,7 @@ const sampleUserTokens = [
     isMutable: true, 
     hasUpdateAuthority: true, 
     hasFreezeAuthority: false, 
-    distributionType: "percentage" as const, 
+    distributionType: "percentage", 
     liquidityPercentage: "10",
     linkedCoin: "netx" 
   },
@@ -34,7 +34,7 @@ const sampleUserTokens = [
     isMutable: false, 
     hasUpdateAuthority: true, 
     hasFreezeAuthority: true, 
-    distributionType: "percentage" as const, 
+    distributionType: "percentage", 
     liquidityPercentage: "15",
     linkedCoin: "eth" 
   }
@@ -43,7 +43,7 @@ const sampleUserTokens = [
 export default function TokenCreation() {
   const [creationStatus, setCreationStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [createdToken, setCreatedToken] = useState<TokenFormData | null>(null);
-  const [userTokens, setUserTokens] = useState(sampleUserTokens);
+  const [userTokens, setUserTokens] = useState<TokenFormData[]>(sampleUserTokens);
   const [currentTab, setCurrentTab] = useState("create");
   const [editingToken, setEditingToken] = useState<TokenFormData | null>(null);
   

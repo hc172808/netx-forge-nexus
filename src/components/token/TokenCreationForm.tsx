@@ -8,6 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
 
 interface TokenCreationFormProps {
   onSubmit: (tokenData: TokenFormData) => void;
@@ -38,6 +40,17 @@ const availableLiquidityCoins = [
   { id: "bnb", name: "Binance Coin", liquidity: "Medium" }
 ];
 
+// Paid feature prices (would normally come from a backend)
+const featurePrices = {
+  mintable: 50,
+  mutable: 30,
+  updateAuthority: 25,
+  freezeAuthority: 40,
+  tokenCreation: 100,
+  sending: 5,
+  trading: 10
+};
+
 export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProps) {
   const [formData, setFormData] = useState<TokenFormData>({
     name: "",
@@ -56,6 +69,7 @@ export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProp
   
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(!!editToken);
+  const [totalCost, setTotalCost] = useState<number>(0);
   
   // If editToken is provided, populate the form
   useEffect(() => {
@@ -74,12 +88,37 @@ export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProp
     }
   }, [editToken]);
   
+  // Calculate total cost based on selected paid features
+  useEffect(() => {
+    let cost = isEditing ? 0 : featurePrices.tokenCreation;
+    if (formData.isMintable) cost += featurePrices.mintable;
+    if (formData.isMutable) cost += featurePrices.mutable;
+    if (formData.hasUpdateAuthority) cost += featurePrices.updateAuthority;
+    if (formData.hasFreezeAuthority) cost += featurePrices.freezeAuthority;
+    setTotalCost(cost);
+  }, [formData, isEditing]);
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
   
   const handleSwitchChange = (name: keyof TokenFormData) => (checked: boolean) => {
+    // Show a prompt if enabling a paid feature
+    if (checked && 
+        (name === 'isMintable' || name === 'isMutable' || 
+         name === 'hasUpdateAuthority' || name === 'hasFreezeAuthority')) {
+      const featurePrice = 
+        name === 'isMintable' ? featurePrices.mintable :
+        name === 'isMutable' ? featurePrices.mutable :
+        name === 'hasUpdateAuthority' ? featurePrices.updateAuthority :
+        featurePrices.freezeAuthority;
+      
+      toast(`Enabling ${name} will cost ${featurePrice} NETX`, {
+        description: "This will be charged when you submit the form"
+      });
+    }
+    
     setFormData((prev) => ({ ...prev, [name]: checked }));
   };
   
@@ -108,6 +147,20 @@ export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProp
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.linkedCoin) {
+      toast.error("You must link your token to a coin with liquidity");
+      return;
+    }
+    
+    // Cost confirmation
+    if (totalCost > 0) {
+      if (!window.confirm(`This will cost ${totalCost} NETX. Do you want to proceed?`)) {
+        return;
+      }
+    }
+    
     onSubmit(formData);
   };
   
@@ -117,6 +170,12 @@ export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProp
         <CardTitle>{isEditing ? "Edit Token" : "Create New Token"}</CardTitle>
         <CardDescription>
           Configure your token settings. All tokens must link to a coin with liquidity.
+          {!isEditing && (
+            <div className="flex items-center space-x-2 mt-2 text-amber-600 dark:text-amber-400">
+              <AlertCircle className="h-4 w-4" />
+              <span>Token creation base fee: {featurePrices.tokenCreation} NETX</span>
+            </div>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -222,10 +281,13 @@ export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProp
               </div>
               
               <div className="space-y-2">
-                <Label>Token Properties</Label>
+                <Label>Token Properties (Paid Features)</Label>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="isMintable" className="cursor-pointer">Mintable</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="isMintable" className="cursor-pointer">Mintable</Label>
+                      <span className="text-xs text-amber-600 dark:text-amber-400">(+{featurePrices.mintable} NETX)</span>
+                    </div>
                     <Switch 
                       id="isMintable" 
                       checked={formData.isMintable} 
@@ -234,7 +296,10 @@ export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProp
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="isMutable" className="cursor-pointer">Mutable</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="isMutable" className="cursor-pointer">Mutable</Label>
+                      <span className="text-xs text-amber-600 dark:text-amber-400">(+{featurePrices.mutable} NETX)</span>
+                    </div>
                     <Switch 
                       id="isMutable" 
                       checked={formData.isMutable} 
@@ -243,7 +308,10 @@ export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProp
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="hasUpdateAuthority" className="cursor-pointer">Update Authority</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="hasUpdateAuthority" className="cursor-pointer">Update Authority</Label>
+                      <span className="text-xs text-amber-600 dark:text-amber-400">(+{featurePrices.updateAuthority} NETX)</span>
+                    </div>
                     <Switch 
                       id="hasUpdateAuthority" 
                       checked={formData.hasUpdateAuthority} 
@@ -252,7 +320,10 @@ export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProp
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="hasFreezeAuthority" className="cursor-pointer">Freeze Authority</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="hasFreezeAuthority" className="cursor-pointer">Freeze Authority</Label>
+                      <span className="text-xs text-amber-600 dark:text-amber-400">(+{featurePrices.freezeAuthority} NETX)</span>
+                    </div>
                     <Switch 
                       id="hasFreezeAuthority" 
                       checked={formData.hasFreezeAuthority} 
@@ -306,9 +377,15 @@ export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProp
             </p>
           </div>
           
-          <Button type="submit" className="w-full">
-            {isEditing ? "Save Changes" : "Create Token"}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between py-2 border-t">
+              <span className="font-semibold">Total Cost:</span>
+              <span className="font-bold text-amber-600 dark:text-amber-400">{totalCost} NETX</span>
+            </div>
+            <Button type="submit" className="w-full">
+              {isEditing ? "Save Changes" : "Create Token"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
