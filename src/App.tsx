@@ -21,7 +21,7 @@ import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import NodeSetup from "./pages/NodeSetup";
 import Trading from "./pages/Trading";
-import { StrictMode, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getActiveWallet } from "./services/walletService";
 
 // Initialize QueryClient outside of the component
@@ -44,7 +44,7 @@ const App = () => {
   }, []);
 
   return (
-    <StrictMode>
+    <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -85,7 +85,7 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
-    </StrictMode>
+    </React.StrictMode>
   );
 };
 
