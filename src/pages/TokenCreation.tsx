@@ -2,22 +2,90 @@
 import { TokenCreationForm, TokenFormData } from "@/components/token/TokenCreationForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Edit, Plus } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+
+// Sample list of user tokens
+const sampleUserTokens = [
+  { 
+    name: "NETX Governance", 
+    symbol: "NXTG", 
+    initialSupply: "10000000", 
+    description: "Governance token for the NETX ecosystem",
+    logo: null, 
+    isMintable: true, 
+    isMutable: true, 
+    hasUpdateAuthority: true, 
+    hasFreezeAuthority: false, 
+    distributionType: "percentage" as const, 
+    liquidityPercentage: "10",
+    linkedCoin: "netx" 
+  },
+  { 
+    name: "NETX Exchange", 
+    symbol: "NXTX", 
+    initialSupply: "5000000", 
+    description: "Utility token for the NETX exchange",
+    logo: null, 
+    isMintable: true, 
+    isMutable: false, 
+    hasUpdateAuthority: true, 
+    hasFreezeAuthority: true, 
+    distributionType: "percentage" as const, 
+    liquidityPercentage: "15",
+    linkedCoin: "eth" 
+  }
+];
 
 export default function TokenCreation() {
   const [creationStatus, setCreationStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [createdToken, setCreatedToken] = useState<TokenFormData | null>(null);
+  const [userTokens, setUserTokens] = useState(sampleUserTokens);
+  const [currentTab, setCurrentTab] = useState("create");
+  const [editingToken, setEditingToken] = useState<TokenFormData | null>(null);
   
   const handleTokenCreation = (tokenData: TokenFormData) => {
-    console.log("Creating token:", tokenData);
-    // In a real app, this would call a blockchain contract
+    console.log("Token data:", tokenData);
     
-    // Simulate success
+    // If linkedCoin is not provided, show an error
+    if (!tokenData.linkedCoin) {
+      toast.error("You must link your token to a coin with liquidity");
+      setCreationStatus('error');
+      return;
+    }
+    
+    // Check if we're editing an existing token
+    if (editingToken) {
+      // Update the token in the list
+      setUserTokens(userTokens.map(token => 
+        token.symbol === editingToken.symbol ? tokenData : token
+      ));
+      toast.success(`Token ${tokenData.symbol} updated successfully`);
+      setEditingToken(null);
+    } else {
+      // Add the new token to the list
+      setUserTokens([...userTokens, tokenData]);
+      toast.success(`Token ${tokenData.symbol} created successfully`);
+    }
+    
+    // Show success message
+    setCreationStatus('success');
+    setCreatedToken(tokenData);
+    
+    // Reset form after a delay
     setTimeout(() => {
-      setCreationStatus('success');
-      setCreatedToken(tokenData);
-    }, 1500);
+      setCreationStatus('idle');
+      setCreatedToken(null);
+      setCurrentTab("my-tokens");
+    }, 2000);
+  };
+  
+  const handleEditToken = (token: TokenFormData) => {
+    setEditingToken(token);
+    setCurrentTab("create");
   };
   
   return (
@@ -26,9 +94,12 @@ export default function TokenCreation() {
         <h1 className="text-2xl font-bold">Token Creation</h1>
       </div>
       
-      <Tabs defaultValue="create" className="space-y-6">
+      <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
         <TabsList>
-          <TabsTrigger value="create">Create Token</TabsTrigger>
+          <TabsTrigger value="create">
+            {editingToken ? "Edit Token" : "Create Token"}
+          </TabsTrigger>
+          <TabsTrigger value="my-tokens">My Tokens</TabsTrigger>
           <TabsTrigger value="guide">Creation Guide</TabsTrigger>
           <TabsTrigger value="requirements">Requirements</TabsTrigger>
         </TabsList>
@@ -54,7 +125,68 @@ export default function TokenCreation() {
             </Alert>
           )}
           
-          <TokenCreationForm onSubmit={handleTokenCreation} />
+          <TokenCreationForm 
+            onSubmit={handleTokenCreation} 
+            editToken={editingToken}
+          />
+        </TabsContent>
+        
+        <TabsContent value="my-tokens" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">My Tokens</h2>
+            <Button onClick={() => { 
+              setEditingToken(null);
+              setCurrentTab("create");
+            }} variant="outline">
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Token
+            </Button>
+          </div>
+          
+          {userTokens.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-muted-foreground">You haven't created any tokens yet.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userTokens.map((token, index) => (
+                <Card key={index} className="overflow-hidden">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-lg">{token.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">{token.symbol}</p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleEditToken(token)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-2 mt-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Supply</span>
+                        <span>{token.initialSupply}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Linked to</span>
+                        <span className="font-medium">{token.linkedCoin?.toUpperCase() || "None"}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Creator Reserve</span>
+                        <span>{token.distributionType === "percentage" ? `${token.liquidityPercentage}%` : "Burn 99%"}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
         
         <TabsContent value="guide" className="space-y-6">
@@ -76,7 +208,14 @@ export default function TokenCreation() {
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-2">3. Set Token Properties</h3>
+                <h3 className="text-lg font-medium mb-2">3. Link to a Liquidity Coin</h3>
+                <p className="text-muted-foreground">
+                  Select a coin with sufficient liquidity to link your token with. This is required for trading on the marketplace.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">4. Set Token Properties</h3>
                 <p className="text-muted-foreground">
                   Configure whether your token is mintable, mutable, and if it has update or freeze authority.
                 </p>
@@ -89,7 +228,7 @@ export default function TokenCreation() {
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-2">4. Liquidity Requirements</h3>
+                <h3 className="text-lg font-medium mb-2">5. Liquidity Requirements</h3>
                 <p className="text-muted-foreground">
                   Choose to either reserve 5% (or more) of tokens for the creator or burn 99% of the supply.
                   This is required to ensure token quality and prevent spam.
@@ -97,7 +236,7 @@ export default function TokenCreation() {
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-2">5. Create Your Token</h3>
+                <h3 className="text-lg font-medium mb-2">6. Create Your Token</h3>
                 <p className="text-muted-foreground">
                   Review your settings and create the token. Once created, tokens cannot be fully deleted from the blockchain.
                 </p>

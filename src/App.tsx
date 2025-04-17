@@ -19,6 +19,7 @@ import Admin from "./pages/Admin";
 import AdminUsers from "./pages/AdminUsers";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
+import NodeSetup from "./pages/NodeSetup";
 import { StrictMode } from "react";
 
 // Initialize QueryClient outside of the component
@@ -56,6 +57,7 @@ const App = () => {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/node-setup" element={<NodeSetup />} />
                 {/* Redirects for common typos */}
                 <Route path="/users" element={<Navigate to="/admin/users" replace />} />
                 <Route path="/tokens" element={<Navigate to="/marketplace" replace />} />
@@ -63,6 +65,7 @@ const App = () => {
                 <Route path="/profile" element={<Navigate to="/wallet" replace />} />
                 <Route path="/chart" element={<Navigate to="/analytics" replace />} />
                 <Route path="/transactions" element={<Navigate to="/history" replace />} />
+                <Route path="/nodes" element={<Navigate to="/node-setup" replace />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

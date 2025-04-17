@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
 
 interface TokenCreationFormProps {
   onSubmit: (tokenData: TokenFormData) => void;
+  editToken?: TokenFormData; // Optional prop for editing existing token
 }
 
 export interface TokenFormData {
@@ -24,9 +26,19 @@ export interface TokenFormData {
   hasFreezeAuthority: boolean;
   distributionType: "percentage" | "burn";
   liquidityPercentage: string;
+  linkedCoin?: string; // New field for linking to a coin with liquidity
 }
 
-export function TokenCreationForm({ onSubmit }: TokenCreationFormProps) {
+// Sample liquidity coins data
+const availableLiquidityCoins = [
+  { id: "netx", name: "NETX", liquidity: "High" },
+  { id: "eth", name: "Ethereum", liquidity: "High" },
+  { id: "btc", name: "Bitcoin", liquidity: "High" },
+  { id: "usdt", name: "Tether", liquidity: "Medium" },
+  { id: "bnb", name: "Binance Coin", liquidity: "Medium" }
+];
+
+export function TokenCreationForm({ onSubmit, editToken }: TokenCreationFormProps) {
   const [formData, setFormData] = useState<TokenFormData>({
     name: "",
     symbol: "",
@@ -39,9 +51,28 @@ export function TokenCreationForm({ onSubmit }: TokenCreationFormProps) {
     hasFreezeAuthority: false,
     distributionType: "percentage",
     liquidityPercentage: "5",
+    linkedCoin: "netx", // Default to NETX
   });
   
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(!!editToken);
+  
+  // If editToken is provided, populate the form
+  useEffect(() => {
+    if (editToken) {
+      setFormData(editToken);
+      setIsEditing(true);
+      
+      // If we have a logo file and it's a file object, create preview
+      if (editToken.logo && editToken.logo instanceof File) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setLogoPreview(reader.result as string);
+        };
+        reader.readAsDataURL(editToken.logo);
+      }
+    }
+  }, [editToken]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -71,6 +102,10 @@ export function TokenCreationForm({ onSubmit }: TokenCreationFormProps) {
     }
   };
   
+  const handleLinkedCoinChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, linkedCoin: value }));
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
@@ -79,7 +114,7 @@ export function TokenCreationForm({ onSubmit }: TokenCreationFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create New Token</CardTitle>
+        <CardTitle>{isEditing ? "Edit Token" : "Create New Token"}</CardTitle>
         <CardDescription>
           Configure your token settings. All tokens must link to a coin with liquidity.
         </CardDescription>
@@ -136,6 +171,28 @@ export function TokenCreationForm({ onSubmit }: TokenCreationFormProps) {
                   required 
                 />
               </div>
+
+              <div>
+                <Label htmlFor="linkedCoin">Link to Liquidity Coin (Required)</Label>
+                <Select 
+                  value={formData.linkedCoin}
+                  onValueChange={handleLinkedCoinChange}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a coin to link" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableLiquidityCoins.map((coin) => (
+                      <SelectItem key={coin.id} value={coin.id}>
+                        {coin.name} - {coin.liquidity} Liquidity
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your token must link to a coin with sufficient liquidity for trading.
+                </p>
+              </div>
             </div>
             
             <div className="space-y-4">
@@ -159,7 +216,7 @@ export function TokenCreationForm({ onSubmit }: TokenCreationFormProps) {
                     type="file" 
                     accept="image/*" 
                     onChange={handleLogoChange}
-                    required
+                    required={!isEditing || !formData.logo}
                   />
                 </div>
               </div>
@@ -249,7 +306,9 @@ export function TokenCreationForm({ onSubmit }: TokenCreationFormProps) {
             </p>
           </div>
           
-          <Button type="submit" className="w-full">Create Token</Button>
+          <Button type="submit" className="w-full">
+            {isEditing ? "Save Changes" : "Create Token"}
+          </Button>
         </form>
       </CardContent>
     </Card>
