@@ -1,21 +1,18 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart4, Ban, Check, DollarSign, Edit, Key, Lock, Plus, Search, Shield, Trash, Unlock, Upload, User, UserCheck, UserCog, UserRound, UsersRound } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Activity, Ban, Check, DollarSign, Key, Lock, Shield, Unlock, Wallet, CreditCard, Coins, Settings, KeyRound } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { VerificationRequests } from "@/components/admin/VerificationRequests";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data for users
 const initialUsers = [
   { 
     id: "1", 
@@ -102,21 +99,35 @@ const initialUsers = [
 export default function AdminUsers() {
   const [users, setUsers] = useState(initialUsers);
   const [searchValue, setSearchValue] = useState("");
+  const [mintPrice, setMintPrice] = useState(100);
+  const [authoritySettings, setAuthoritySettings] = useState({
+    mintable: true,
+    mutable: true,
+    updateAuthority: true,
+    freezeAuthority: false
+  });
+  const [paymentMethods, setPaymentMethods] = useState({
+    creditCard: true,
+    crypto: true,
+    bankTransfer: false
+  });
+  const [quantumSettings, setQuantumSettings] = useState({
+    quantumResistant: true,
+    hybridEncryption: true,
+    autoKeyRotation: false
+  });
   const { toast } = useToast();
-  
-  // New state for user form
+
   const [newUserData, setNewUserData] = useState({
     name: "",
     email: "",
     role: "user",
     avatarUrl: "https://placehold.co/150x150/5e57e8/ffffff.png?text=NU"
   });
-  
-  // Load users from localStorage
+
   useEffect(() => {
     const localUsers: any[] = [];
     
-    // Get all keys from localStorage that start with "user-profile-"
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('user-profile-')) {
         const userData = JSON.parse(localStorage.getItem(key) || '{}');
@@ -142,10 +153,8 @@ export default function AdminUsers() {
       }
     });
     
-    // Merge with initial users if there are no local users
     if (localUsers.length > 0) {
       setUsers(prevUsers => {
-        // Don't duplicate users with the same id
         const userIds = new Set(localUsers.map(u => u.id));
         const filteredInitials = prevUsers.filter(u => !userIds.has(u.id));
         return [...filteredInitials, ...localUsers];
@@ -174,7 +183,6 @@ export default function AdminUsers() {
   };
   
   const addNewUser = () => {
-    // In a real app, this would create a new user in the system
     const newUser = {
       id: (users.length + 1).toString(),
       name: newUserData.name,
@@ -214,7 +222,6 @@ export default function AdminUsers() {
           [feature]: !user.features[feature]
         };
         
-        // Also update in local storage if this is a real user
         const userProfileKey = 'user-profile-' + userId;
         const userProfileData = localStorage.getItem(userProfileKey);
         
@@ -243,6 +250,39 @@ export default function AdminUsers() {
     toast({
       title: `${featureNames[feature]} Feature Updated`,
       description: `The feature has been ${users.find(u => u.id === userId)?.features[feature] ? 'disabled' : 'enabled'} for this user.`,
+    });
+  };
+
+  const toggleAuthoritySetting = (setting: keyof typeof authoritySettings) => {
+    setAuthoritySettings(prev => ({
+      ...prev,
+      [setting]: !prev[setting]
+    }));
+    toast({
+      title: "Authority Setting Updated",
+      description: `${setting} has been ${!authoritySettings[setting] ? 'enabled' : 'disabled'}`
+    });
+  };
+
+  const togglePaymentMethod = (method: keyof typeof paymentMethods) => {
+    setPaymentMethods(prev => ({
+      ...prev,
+      [method]: !prev[method]
+    }));
+    toast({
+      title: "Payment Method Updated",
+      description: `${method} has been ${!paymentMethods[method] ? 'enabled' : 'disabled'}`
+    });
+  };
+
+  const toggleQuantumSetting = (setting: keyof typeof quantumSettings) => {
+    setQuantumSettings(prev => ({
+      ...prev,
+      [setting]: !prev[setting]
+    }));
+    toast({
+      title: "Quantum Security Setting Updated",
+      description: `${setting} has been ${!quantumSettings[setting] ? 'enabled' : 'disabled'}`
     });
   };
 
@@ -331,6 +371,9 @@ export default function AdminUsers() {
         <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="verification">Verification Requests</TabsTrigger>
+          <TabsTrigger value="settings">Token Settings</TabsTrigger>
+          <TabsTrigger value="payment">Payment Methods</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
         
         <TabsContent value="users">
@@ -539,6 +582,187 @@ export default function AdminUsers() {
         
         <TabsContent value="verification">
           <VerificationRequests />
+        </TabsContent>
+        
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Token Authority Settings</CardTitle>
+              <CardDescription>Configure token minting and authority settings</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Mint Price (NETX)</Label>
+                    <div className="w-80">
+                      <Slider 
+                        value={[mintPrice]} 
+                        onValueChange={([value]) => setMintPrice(value)} 
+                        max={1000}
+                        step={10}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Current price: {mintPrice} NETX</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Mintable</Label>
+                      <p className="text-sm text-muted-foreground">Allow new tokens to be minted</p>
+                    </div>
+                    <Switch 
+                      checked={authoritySettings.mintable}
+                      onCheckedChange={() => toggleAuthoritySetting('mintable')}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Mutable</Label>
+                      <p className="text-sm text-muted-foreground">Allow token metadata to be updated</p>
+                    </div>
+                    <Switch 
+                      checked={authoritySettings.mutable}
+                      onCheckedChange={() => toggleAuthoritySetting('mutable')}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Update Authority</Label>
+                      <p className="text-sm text-muted-foreground">Allow authority transfer</p>
+                    </div>
+                    <Switch 
+                      checked={authoritySettings.updateAuthority}
+                      onCheckedChange={() => toggleAuthoritySetting('updateAuthority')}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Freeze Authority</Label>
+                      <p className="text-sm text-muted-foreground">Allow freezing token accounts</p>
+                    </div>
+                    <Switch 
+                      checked={authoritySettings.freezeAuthority}
+                      onCheckedChange={() => toggleAuthoritySetting('freezeAuthority')}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="payment">
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Methods</CardTitle>
+              <CardDescription>Configure available payment methods</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center">
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Credit Card
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Accept credit card payments</p>
+                  </div>
+                  <Switch 
+                    checked={paymentMethods.creditCard}
+                    onCheckedChange={() => togglePaymentMethod('creditCard')}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center">
+                      <Coins className="w-4 h-4 mr-2" />
+                      Cryptocurrency
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Accept cryptocurrency payments</p>
+                  </div>
+                  <Switch 
+                    checked={paymentMethods.crypto}
+                    onCheckedChange={() => togglePaymentMethod('crypto')}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center">
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      Bank Transfer
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Accept bank transfer payments</p>
+                  </div>
+                  <Switch 
+                    checked={paymentMethods.bankTransfer}
+                    onCheckedChange={() => togglePaymentMethod('bankTransfer')}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="security">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quantum Security Settings</CardTitle>
+              <CardDescription>Configure quantum-safe security features</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Quantum-Resistant Encryption
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Enable post-quantum cryptography</p>
+                  </div>
+                  <Switch 
+                    checked={quantumSettings.quantumResistant}
+                    onCheckedChange={() => toggleQuantumSetting('quantumResistant')}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center">
+                      <KeyRound className="w-4 h-4 mr-2" />
+                      Hybrid Encryption
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Use both classical and quantum-safe encryption</p>
+                  </div>
+                  <Switch 
+                    checked={quantumSettings.hybridEncryption}
+                    onCheckedChange={() => toggleQuantumSetting('hybridEncryption')}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Automatic Key Rotation
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Periodically rotate encryption keys</p>
+                  </div>
+                  <Switch 
+                    checked={quantumSettings.autoKeyRotation}
+                    onCheckedChange={() => toggleQuantumSetting('autoKeyRotation')}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
