@@ -2,6 +2,7 @@
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
+import { AuthProvider } from './contexts/AuthContext';
 import './index.css';
 
 // For dark mode by default
@@ -16,6 +17,8 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <BrowserRouter>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </BrowserRouter>
 );

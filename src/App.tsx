@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 // Pages
 import Dashboard from "@/pages/Dashboard";
@@ -23,6 +24,7 @@ import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
 import NodeSetup from "@/pages/NodeSetup";
 import Settings from "@/pages/Settings";
+import ForgotPassword from "@/pages/ForgotPassword";
 
 // Layout
 import { Layout } from "@/components/layout/Layout";
@@ -38,7 +40,13 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-react-theme">
       <Toaster />
       <Routes>
-        <Route element={<Layout />}>
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/token-creation" element={<TokenCreation />} />
@@ -47,17 +55,18 @@ function App() {
           <Route path="/exchange" element={<Exchange />} />
           <Route path="/explorer" element={<Explorer />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/liquidity" element={<AdminLiquidityPool />} />
-          <Route path="/admin/tokens" element={<AdminTokens />} />
-          <Route path="/admin/security" element={<AdminSecurity />} />
           <Route path="/node-setup" element={<NodeSetup />} />
-          <Route path="*" element={<NotFound />} />
+          
+          {/* Admin routes - require admin role */}
+          <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/liquidity" element={<ProtectedRoute requireAdmin><AdminLiquidityPool /></ProtectedRoute>} />
+          <Route path="/admin/tokens" element={<ProtectedRoute requireAdmin><AdminTokens /></ProtectedRoute>} />
+          <Route path="/admin/security" element={<ProtectedRoute requireAdmin><AdminSecurity /></ProtectedRoute>} />
         </Route>
+        
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </ThemeProvider>
   );

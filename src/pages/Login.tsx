@@ -1,4 +1,6 @@
 
+import { useState } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,9 +9,65 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Activity, KeyRound, LogIn, Wallet } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Login() {
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: ""
+  });
+  const [recoveryPhrase, setRecoveryPhrase] = useState("");
+  const [walletPassword, setWalletPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, loginWithWallet } = useAuth();
+
+  // Get the redirect path from location state, or default to dashboard
+  const from = location.state?.from?.pathname || "/";
+
+  const handleCredentialsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setCredentials(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const success = await login(credentials.username, credentials.password);
+      
+      if (success) {
+        // If login was successful, redirect to the page they tried to access
+        navigate(from, { replace: true });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleWalletSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const success = await loginWithWallet(recoveryPhrase, walletPassword);
+      
+      if (success) {
+        // If login was successful, redirect to the page they tried to access
+        navigate(from, { replace: true });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md px-4">
@@ -40,10 +98,16 @@ export default function Login() {
               </TabsList>
               
               <TabsContent value="credentials" className="p-1">
-                <form className="space-y-4 mt-4">
+                <form className="space-y-4 mt-4" onSubmit={handleCredentialsSubmit}>
                   <div className="space-y-2">
                     <Label htmlFor="username">Username</Label>
-                    <Input id="username" placeholder="Enter your username" />
+                    <Input 
+                      id="username" 
+                      placeholder="Enter your username" 
+                      value={credentials.username}
+                      onChange={handleCredentialsChange}
+                      disabled={isLoading}
+                    />
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -55,27 +119,50 @@ export default function Login() {
                         Forgot password?
                       </Link>
                     </div>
-                    <Input id="password" type="password" placeholder="Enter your password" />
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      placeholder="Enter your password" 
+                      value={credentials.password}
+                      onChange={handleCredentialsChange}
+                      disabled={isLoading}
+                    />
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="remember" />
+                    <Checkbox 
+                      id="remember" 
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => 
+                        setRememberMe(checked as boolean)
+                      }
+                      disabled={isLoading}
+                    />
                     <Label htmlFor="remember" className="text-sm">Remember me for 30 days</Label>
                   </div>
-                  <Button type="submit" className="w-full">
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Login
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                        Logging in...
+                      </>
+                    ) : (
+                      <>
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Login
+                      </>
+                    )}
                   </Button>
                 </form>
               </TabsContent>
               
               <TabsContent value="wallet" className="p-1">
-                <div className="space-y-4 mt-4">
+                <form className="space-y-4 mt-4" onSubmit={handleWalletSubmit}>
                   <p className="text-sm text-muted-foreground">
                     Connect with one of our supported wallet providers:
                   </p>
                   
                   <div className="grid gap-2">
-                    <Button variant="outline" className="justify-start">
+                    <Button variant="outline" className="justify-start" type="button">
                       <img 
                         src="https://placehold.co/30x30/4c54e8/ffffff.png?text=TW"
                         alt="Trust Wallet" 
@@ -83,7 +170,7 @@ export default function Login() {
                       />
                       Trust Wallet
                     </Button>
-                    <Button variant="outline" className="justify-start">
+                    <Button variant="outline" className="justify-start" type="button">
                       <img 
                         src="https://placehold.co/30x30/9945ff/ffffff.png?text=PH"
                         alt="Phantom" 
@@ -91,7 +178,7 @@ export default function Login() {
                       />
                       Phantom Wallet
                     </Button>
-                    <Button variant="outline" className="justify-start">
+                    <Button variant="outline" className="justify-start" type="button">
                       <img 
                         src="https://placehold.co/30x30/f97316/ffffff.png?text=MM"
                         alt="MetaMask" 
@@ -103,16 +190,41 @@ export default function Login() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="recoveryPhrase">Or enter wallet recovery phrase</Label>
-                    <Input id="recoveryPhrase" placeholder="Enter recovery phrase" />
+                    <Input 
+                      id="recoveryPhrase" 
+                      placeholder="Enter recovery phrase" 
+                      value={recoveryPhrase}
+                      onChange={(e) => setRecoveryPhrase(e.target.value)}
+                      disabled={isLoading}
+                    />
                     <p className="text-xs text-muted-foreground">
                       Enter your 12, 18, or 24-word recovery phrase
                     </p>
                   </div>
                   
-                  <Button className="w-full">
-                    Connect Wallet
+                  <div className="space-y-2">
+                    <Label htmlFor="walletPassword">Wallet Password</Label>
+                    <Input 
+                      id="walletPassword" 
+                      type="password"
+                      placeholder="Enter wallet password" 
+                      value={walletPassword}
+                      onChange={(e) => setWalletPassword(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  
+                  <Button className="w-full" type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                        Connecting...
+                      </>
+                    ) : (
+                      "Connect Wallet"
+                    )}
                   </Button>
-                </div>
+                </form>
               </TabsContent>
             </Tabs>
           </CardContent>
