@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,16 +32,14 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
 
   const copySeedPhrase = () => {
     navigator.clipboard.writeText(seedPhrase);
-    toast({
-      title: "Copied to clipboard",
-      description: "Seed phrase has been copied to your clipboard",
+    toast("Copied to clipboard", {
+      description: "Seed phrase has been copied to your clipboard"
     });
   };
 
   const handleCreateWallet = async () => {
     if (!hasConfirmedBackup) {
-      toast({
-        title: "Backup required",
+      toast("Backup required", {
         description: "Please confirm that you've backed up your seed phrase",
         variant: "destructive"
       });
@@ -50,8 +47,7 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
     }
 
     if (password !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
+      toast("Passwords don't match", {
         description: "Please make sure your passwords match",
         variant: "destructive"
       });
@@ -63,9 +59,8 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
       const newWallet = createWallet('secret-phrase', password, walletName, seedPhrase);
       
       if (newWallet) {
-        toast({
-          title: "Wallet created",
-          description: "Your new wallet has been created successfully",
+        toast("Wallet created", {
+          description: "Your new wallet has been created successfully"
         });
         
         if (onSuccess) onSuccess();
@@ -74,8 +69,7 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
       }
     } catch (error) {
       console.error("Error creating wallet:", error);
-      toast({
-        title: "Error creating wallet",
+      toast("Error creating wallet", {
         description: "An error occurred while creating your wallet. Please try again.",
         variant: "destructive"
       });
@@ -86,8 +80,7 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
 
   const handleImportWallet = async () => {
     if (!importSeedPhrase) {
-      toast({
-        title: "Seed phrase required",
+      toast("Seed phrase required", {
         description: "Please enter your seed phrase",
         variant: "destructive"
       });
@@ -95,8 +88,7 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
     }
 
     if (password !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
+      toast("Passwords don't match", {
         description: "Please make sure your passwords match",
         variant: "destructive"
       });
@@ -108,9 +100,8 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
       const importedWallet = importWalletWithSeedPhrase(importSeedPhrase, password, walletName);
       
       if (importedWallet) {
-        toast({
-          title: "Wallet imported",
-          description: "Your wallet has been imported successfully",
+        toast("Wallet imported", {
+          description: "Your wallet has been imported successfully"
         });
         
         if (onSuccess) onSuccess();
@@ -119,8 +110,7 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
       }
     } catch (error) {
       console.error("Error importing wallet:", error);
-      toast({
-        title: "Error importing wallet",
+      toast("Error importing wallet", {
         description: "An error occurred while importing your wallet. Please ensure your seed phrase is correct.",
         variant: "destructive"
       });

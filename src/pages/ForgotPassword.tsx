@@ -1,50 +1,50 @@
 
 import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Activity, ArrowLeft, Mail } from "lucide-react";
-import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { Activity, ArrowLeft, Send } from "lucide-react";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!email) {
-      toast({
-        title: "Error",
+      toast("Email required", {
         description: "Please enter your email address",
         variant: "destructive",
       });
       return;
     }
-
-    setIsSubmitting(true);
     
-    // Simulate API call for password reset
+    setIsLoading(true);
+    
     try {
-      // This would be an actual API call in production
+      // Simulate API call for password reset
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // For demo purposes, just show success
       setIsSubmitted(true);
-      toast({
-        title: "Reset link sent",
-        description: "If an account exists with this email, you'll receive a reset link.",
+      toast("Reset email sent", {
+        description: "Check your inbox for password reset instructions",
       });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
+      console.error("Password reset error:", error);
+      toast("Reset request failed", {
+        description: "An error occurred. Please try again later.",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -59,66 +59,75 @@ export default function ForgotPassword() {
         
         <Card>
           <CardHeader>
-            <CardTitle>{isSubmitted ? "Check Your Email" : "Reset Password"}</CardTitle>
+            <CardTitle>Reset your password</CardTitle>
             <CardDescription>
-              {isSubmitted 
-                ? "We've sent you a password reset link" 
-                : "Enter your email to receive a password reset link"}
+              {!isSubmitted 
+                ? "Enter your email address and we'll send you a link to reset your password" 
+                : "Check your email for reset instructions"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isSubmitted ? (
-              <div className="text-center py-4 space-y-4">
-                <Mail className="h-12 w-12 mx-auto text-primary mb-2" />
-                <p className="text-muted-foreground">
-                  If an account exists with the email <span className="font-medium text-foreground">{email}</span>, you'll receive a password reset link.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Please check your spam folder if you don't see the email in your inbox.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+            {!isSubmitted ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">Email address</Label>
                   <Input 
                     id="email" 
                     type="email" 
                     placeholder="Enter your email address" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
+                    disabled={isLoading}
                   />
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
                     <>
                       <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
-                      Sending...
+                      Processing...
                     </>
                   ) : (
-                    "Send Reset Link"
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send reset link
+                    </>
                   )}
                 </Button>
               </form>
+            ) : (
+              <div className="py-4 text-center">
+                <div className="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Send className="h-6 w-6 text-primary" />
+                </div>
+                <p className="mb-6">
+                  We've sent an email to <strong>{email}</strong> with instructions to reset your password.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsSubmitted(false)}
+                  className="w-full"
+                >
+                  Try another email
+                </Button>
+              </div>
             )}
           </CardContent>
           <Separator />
           <CardFooter className="flex flex-col p-6 gap-4">
-            <Link 
-              to="/login" 
-              className="text-primary hover:underline flex items-center justify-center w-full"
+            <Button 
+              variant="ghost" 
+              className="w-full"
+              onClick={() => navigate("/login")}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Login
-            </Link>
+              Back to login
+            </Button>
             
             <p className="text-xs text-muted-foreground text-center">
-              By continuing, you agree to our Terms of Service and Privacy Policy.
+              Remember your password?{" "}
+              <Link to="/login" className="text-primary hover:underline">
+                Sign in
+              </Link>
             </p>
           </CardFooter>
         </Card>
