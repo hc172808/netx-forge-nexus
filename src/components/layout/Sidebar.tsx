@@ -1,13 +1,13 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Activity, BarChart4, ChevronLeft, ChevronRight, 
-  CreditCard, Database, History, Home, 
-  LayoutDashboard, LogOut, PlusCircle, Receipt, 
-  Settings, ShoppingCart, Users, Wallet 
+  CreditCard, Database, History, 
+  LayoutDashboard, LogOut, PlusCircle, 
+  Settings, ShoppingCart, Users, Wallet,
+  ArrowRightLeft, Shield, Server
 } from "lucide-react";
 import { useState } from "react";
 
@@ -71,6 +71,26 @@ const adminNavItems: NavItem[] = [
     title: "Users",
     href: "/admin/users",
     icon: Users,
+  },
+  {
+    title: "Liquidity Pools",
+    href: "/admin/liquidity",
+    icon: ArrowRightLeft,
+  },
+  {
+    title: "Token Management",
+    href: "/admin/tokens",
+    icon: PlusCircle,
+  },
+  {
+    title: "Node Setup",
+    href: "/node-setup",
+    icon: Server,
+  },
+  {
+    title: "Security",
+    href: "/admin/security",
+    icon: Shield,
   },
 ];
 

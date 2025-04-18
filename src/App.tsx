@@ -1,92 +1,65 @@
-
+import { useEffect } from "react";
+import { Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Layout } from "./components/layout/Layout";
-import Dashboard from "./pages/Dashboard";
-import Wallet from "./pages/Wallet";
-import Marketplace from "./pages/Marketplace";
-import TokenCreation from "./pages/TokenCreation";
-import Login from "./pages/Login";
-import NotFound from "./pages/NotFound";
-import Exchange from "./pages/Exchange";
-import Explorer from "./pages/Explorer";
-import Analytics from "./pages/Analytics";
-import History from "./pages/History";
-import Admin from "./pages/Admin";
-import AdminUsers from "./pages/AdminUsers";
-import Register from "./pages/Register";
-import Settings from "./pages/Settings";
-import NodeSetup from "./pages/NodeSetup";
-import Trading from "./pages/Trading";
-import React, { useEffect, useState } from "react";
-import { getActiveWallet } from "./services/walletService";
+import { Settings } from "lucide-react";
 
-// Initialize QueryClient outside of the component
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+// Pages
+import Dashboard from "@/pages/Dashboard";
+import Admin from "@/pages/Admin";
+import AdminUsers from "@/pages/AdminUsers";
+import AdminLiquidityPool from "@/pages/AdminLiquidityPool";
+import AdminTokens from "@/pages/AdminTokens"; 
+import AdminSecurity from "@/pages/AdminSecurity";
+import Wallet from "@/pages/Wallet";
+import TokenCreation from "@/pages/TokenCreation";
+import Marketplace from "@/pages/Marketplace";
+import History from "@/pages/History";
+import Exchange from "@/pages/Exchange";
+import Explorer from "@/pages/Explorer";
+import Analytics from "@/pages/Analytics";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import NotFound from "@/pages/NotFound";
+import NodeSetup from "@/pages/NodeSetup";
 
-const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+// Layout
+import Layout from "@/components/layout/Layout";
 
-  // Check if there's an active wallet
+import "./App.css";
+
+function App() {
   useEffect(() => {
-    const activeWallet = getActiveWallet();
-    setIsAuthenticated(!!activeWallet);
+    document.title = "NETX Forge";
   }, []);
 
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
-              <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <Register />} />
-              <Route path="/logout" element={<Navigate to="/login" replace />} />
-              
-              <Route element={<Layout />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/marketplace" element={<Marketplace />} />
-                <Route path="/token-creation" element={<TokenCreation />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/exchange" element={<Exchange />} />
-                <Route path="/explorer" element={<Explorer />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/node-setup" element={<NodeSetup />} />
-                <Route path="/trading" element={<Trading />} />
-                {/* Redirects for common typos */}
-                <Route path="/users" element={<Navigate to="/admin/users" replace />} />
-                <Route path="/tokens" element={<Navigate to="/marketplace" replace />} />
-                <Route path="/create-token" element={<Navigate to="/token-creation" replace />} />
-                <Route path="/profile" element={<Navigate to="/wallet" replace />} />
-                <Route path="/chart" element={<Navigate to="/analytics" replace />} />
-                <Route path="/transactions" element={<Navigate to="/history" replace />} />
-                <Route path="/nodes" element={<Navigate to="/node-setup" replace />} />
-                <Route path="/trade" element={<Navigate to="/trading" replace />} />
-              </Route>
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-react-theme">
+      <Toaster />
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/token-creation" element={<TokenCreation />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/exchange" element={<Exchange />} />
+          <Route path="/explorer" element={<Explorer />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/liquidity" element={<AdminLiquidityPool />} />
+          <Route path="/admin/tokens" element={<AdminTokens />} />
+          <Route path="/admin/security" element={<AdminSecurity />} />
+          <Route path="/node-setup" element={<NodeSetup />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </ThemeProvider>
   );
-};
+}
 
 export default App;

@@ -8,10 +8,33 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Activity, Ban, Check, DollarSign, Key, Lock, Shield, Unlock, Wallet, CreditCard, Coins, Settings, KeyRound } from "lucide-react";
+import { 
+  Activity, 
+  Ban, 
+  Check, 
+  DollarSign, 
+  Key, 
+  Lock, 
+  Shield, 
+  Unlock, 
+  Wallet, 
+  CreditCard, 
+  Coins, 
+  Settings, 
+  KeyRound, 
+  Search, 
+  Plus, 
+  UserCog, 
+  Trash,
+  Users as UsersRound,
+  BarChart4
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Avatar } from "@/components/ui/avatar";
+import VerificationRequests from "@/components/admin/VerificationRequests";
 
 const initialUsers = [
   { 

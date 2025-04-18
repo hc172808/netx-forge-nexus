@@ -99,8 +99,8 @@ const dummyTransactionHistory = [
 ];
 
 export default function Wallet() {
-  const [sendModalOpen, setSendModalOpen] = useState(false);
-  const [receiveModalOpen, setReceiveModalOpen] = useState(false);
+  const [sendModalOpen, setIsSendModalOpen] = useState(false);
+  const [receiveModalOpen, setIsReceiveModalOpen] = useState(false);
   const [manageWalletsModalOpen, setManageWalletsModalOpen] = useState(false);
   const [exportPrivateKeyModalOpen, setExportPrivateKeyModalOpen] = useState(false);
   const [backupWalletModalOpen, setBackupWalletModalOpen] = useState(false);
@@ -519,9 +519,8 @@ export default function Wallet() {
               address={activeWallet.address}
               balance={walletBalance}
               tokenSymbol="NETX"
-              onSend={() => setSendModalOpen(true)}
-              onReceive={() => setReceiveModalOpen(true)}
-              onChange={() => setManageWalletsModalOpen(true)}
+              onSend={() => setIsSendModalOpen(true)}
+              onReceive={() => setIsReceiveModalOpen(true)}
             />
           ) : (
             <Card className="flex flex-col justify-center items-center p-8 text-center">
@@ -602,14 +601,14 @@ export default function Wallet() {
                               <Button 
                                 size="sm" 
                                 variant="ghost"
-                                onClick={() => setSendModalOpen(true)}
+                                onClick={() => setIsSendModalOpen(true)}
                               >
                                 Send
                               </Button>
                               <Button 
                                 size="sm" 
                                 variant="ghost"
-                                onClick={() => setReceiveModalOpen(true)}
+                                onClick={() => setIsReceiveModalOpen(true)}
                               >
                                 Receive
                               </Button>
@@ -691,7 +690,7 @@ export default function Wallet() {
       
       <SendTokenModal
         open={sendModalOpen}
-        onOpenChange={setSendModalOpen}
+        onOpenChange={setIsSendModalOpen}
         availableBalance={activeWallet ? walletBalance.replace(/,/g, '') : "0"}
         tokenSymbol="NETX"
         onSend={handleSendToken}
@@ -699,7 +698,7 @@ export default function Wallet() {
       
       <ReceiveTokenModal
         open={receiveModalOpen}
-        onOpenChange={setReceiveModalOpen}
+        onOpenChange={setIsReceiveModalOpen}
         walletAddress={activeWallet?.address || ""}
         tokenSymbol="NETX"
       />
