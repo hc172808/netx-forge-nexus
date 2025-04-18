@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch"; // Added the missing Switch import
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   Breadcrumb,
@@ -37,7 +36,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-// Initial mock data for tokens
 const initialTokens = [
   {
     id: "1",
@@ -72,8 +70,6 @@ export default function AdminTokens() {
   const [tokens, setTokens] = useState(initialTokens);
   const [searchValue, setSearchValue] = useState("");
   const { toast } = useToast();
-  
-  // New token form state
   const [newTokenData, setNewTokenData] = useState({
     name: "",
     symbol: "",
@@ -82,8 +78,8 @@ export default function AdminTokens() {
     mutable: true,
     freezeAuthority: false
   });
-  
-  // Add new token
+  const [editingToken, setEditingToken] = useState(null);
+
   const addNewToken = () => {
     const newToken = {
       id: (tokens.length + 1).toString(),
@@ -110,8 +106,7 @@ export default function AdminTokens() {
       description: `New token ${newTokenData.name} (${newTokenData.symbol}) has been created.`,
     });
   };
-  
-  // Pause/resume token
+
   const toggleTokenStatus = (tokenId: string) => {
     setTokens(tokens.map(token => 
       token.id === tokenId ? { 
@@ -125,8 +120,7 @@ export default function AdminTokens() {
       description: "The token status has been updated successfully.",
     });
   };
-  
-  // Delete token
+
   const deleteToken = (tokenId: string) => {
     setTokens(tokens.filter(token => token.id !== tokenId));
     
@@ -135,7 +129,15 @@ export default function AdminTokens() {
       description: "The token has been deleted successfully.",
     });
   };
-  
+
+  const handleEditToken = (token) => {
+    setEditingToken(token);
+    toast({
+      title: "Token Updated",
+      description: `Token ${token.name} has been updated successfully.`,
+    });
+  };
+
   const filteredTokens = tokens.filter(token => 
     token.name.toLowerCase().includes(searchValue.toLowerCase()) ||
     token.symbol.toLowerCase().includes(searchValue.toLowerCase())
@@ -382,16 +384,52 @@ export default function AdminTokens() {
                               Edit
                             </Button>
                           </DialogTrigger>
-                          <DialogContent>
+                          <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
                               <DialogTitle>Edit Token</DialogTitle>
                               <DialogDescription>
                                 Update token properties and settings.
                               </DialogDescription>
                             </DialogHeader>
-                            {/* Edit token form would go here */}
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="tokenName" className="text-right">Name</Label>
+                                <Input
+                                  id="tokenName"
+                                  defaultValue={token.name}
+                                  className="col-span-3"
+                                  onChange={(e) => setEditingToken({ ...token, name: e.target.value })}
+                                />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="tokenSymbol" className="text-right">Symbol</Label>
+                                <Input
+                                  id="tokenSymbol"
+                                  defaultValue={token.symbol}
+                                  className="col-span-3"
+                                  onChange={(e) => setEditingToken({ ...token, symbol: e.target.value })}
+                                />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="tokenStatus" className="text-right">Status</Label>
+                                <Select
+                                  defaultValue={token.status}
+                                  onValueChange={(value) => setEditingToken({ ...token, status: value })}
+                                >
+                                  <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Select status" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Active">Active</SelectItem>
+                                    <SelectItem value="Paused">Paused</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
                             <DialogFooter>
-                              <Button>Save Changes</Button>
+                              <Button onClick={() => handleEditToken(editingToken)}>
+                                Save Changes
+                              </Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
