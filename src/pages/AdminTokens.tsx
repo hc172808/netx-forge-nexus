@@ -1,35 +1,49 @@
-
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { 
-  ArrowUpDown, 
+  Activity, 
+  Ban, 
+  Check as CheckIcon, 
+  Clock, 
   Coins, 
+  Copy, 
+  DollarSign, 
+  Download, 
   Edit, 
-  Image, 
+  FileText, 
+  Filter, 
+  Link, 
+  Lock, 
   Plus, 
+  RefreshCcw, 
   Search, 
   Settings, 
+  Share, 
   Shield, 
   Tag, 
-  Trash, 
-  Upload,
-  WalletCards,
-  Lock
+  Trash
 } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from "@/components/ui/breadcrumb";
 
-// Initial mock data for tokens
 const initialTokens = [
   { 
     id: "1", 
@@ -82,7 +96,6 @@ export default function AdminTokens() {
   const [searchValue, setSearchValue] = useState("");
   const { toast } = useToast();
   
-  // New token form state
   const [newTokenData, setNewTokenData] = useState({
     name: "",
     symbol: "",
@@ -91,7 +104,6 @@ export default function AdminTokens() {
     price: "0.1"
   });
 
-  // Authority settings
   const [authoritySettings, setAuthoritySettings] = useState({
     mintable: true,
     mutable: true,
@@ -99,7 +111,6 @@ export default function AdminTokens() {
     freezeAuthority: false
   });
   
-  // Mint price state
   const [mintPrice, setMintPrice] = useState(100);
   
   const toggleAuthoritySetting = (setting: keyof typeof authoritySettings) => {
@@ -113,7 +124,6 @@ export default function AdminTokens() {
     });
   };
   
-  // Functions for token management
   const disableToken = (id: string) => {
     setTokens(tokens.map(token => 
       token.id === id ? { ...token, status: token.status === "active" ? "disabled" : "active" } : token
@@ -470,7 +480,7 @@ export default function AdminTokens() {
                               {token.status === "active" ? (
                                 <Lock className="h-4 w-4 text-destructive" />
                               ) : (
-                                <Check className="h-4 w-4 text-green-500" />
+                                <CheckIcon className="h-4 w-4 text-green-500" />
                               )}
                             </Button>
                             <Button 

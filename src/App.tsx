@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -24,7 +25,7 @@ import NotFound from "@/pages/NotFound";
 import NodeSetup from "@/pages/NodeSetup";
 
 // Layout
-import Layout from "@/components/layout/Layout";
+import { Layout } from "@/components/layout/Layout";
 
 import "./App.css";
 

@@ -1,5 +1,3 @@
-
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,11 +5,35 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { 
+  Activity,
+  BarChart4,
+  Coins,
+  DollarSign,
+  Edit,
+  History,
+  Lock,
+  Plus,
+  RefreshCcw,
+  Search as SearchIcon,
+  Settings,
+  Trash,
+  TrendingUp
+} from "lucide-react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, ArrowLeftRight, ArrowRightLeft, BarChart, ChevronDown, ChevronUp, Coins, DollarSign, Edit, Plus, Trash } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from "@/components/ui/breadcrumb";
 
 // Initial mock data for liquidity pools
 const initialPools = [
@@ -184,7 +206,7 @@ export default function AdminLiquidityPool() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
-              <BarChart className="h-4 w-4 mr-2 text-primary" />
+              <BarChart4 className="h-4 w-4 mr-2 text-primary" />
               Average APR
             </CardTitle>
           </CardHeader>
@@ -207,7 +229,7 @@ export default function AdminLiquidityPool() {
         <CardContent>
           <div className="flex items-center justify-between mb-4">
             <div className="relative w-72">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search pools..."
                 className="pl-8"
