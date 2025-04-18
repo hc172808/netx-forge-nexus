@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { Settings } from "lucide-react";
 
 // Pages
 import Dashboard from "@/pages/Dashboard";
@@ -23,6 +22,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
 import NodeSetup from "@/pages/NodeSetup";
+import Settings from "@/pages/Settings";
 
 // Layout
 import { Layout } from "@/components/layout/Layout";
