@@ -34,10 +34,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const activeWallet = getActiveWallet();
         if (activeWallet) {
           setUser(activeWallet);
-          toast({
-            title: "Welcome back!",
+          toast.success("Welcome back!", {
             description: `Logged in as ${activeWallet.name}`
           });
+        } else {
+          // Create admin account if no wallet exists
+          const adminWallet = createWallet(
+            'swift', 
+            'Zaq12wsx@!', 
+            'kenrick hector',
+            undefined,
+            'netlifegy@gmail.com',
+            'netlifegy'
+          );
+          
+          if (adminWallet) {
+            setUser(adminWallet);
+            toast.success("Admin account created automatically", {
+              description: "You've been logged in as admin"
+            });
+          }
         }
       } catch (error) {
         console.error("Error checking authentication:", error);
@@ -54,33 +70,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Create a new wallet if this is the first login
       const existingWallet = getActiveWallet();
       if (!existingWallet) {
-        const newWallet = createWallet('swift', password, email);
+        const newWallet = createWallet('swift', password, 'New User', undefined, email);
         if (newWallet) {
           setUser(newWallet);
-          toast({
-            title: "Account created successfully!",
-            description: "You've been automatically logged in as admin"
+          toast.success("Account created successfully!", {
+            description: "You've been automatically logged in"
           });
           return true;
         }
-      } else if (email === 'admin@example.com' && password === 'password') {
+      } else if (email === 'netlifegy@gmail.com' && password === 'Zaq12wsx@!') {
         setUser(existingWallet);
-        toast({
-            title: "Login successful",
+        toast.success("Login successful", {
             description: "Welcome back!"
         });
         return true;
       }
       
-      toast({
-        title: "Login failed",
+      toast.error("Login failed", {
         description: "Invalid email or password"
       });
       return false;
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        title: "Login error",
+      toast.error("Login error", {
         description: "An error occurred during login. Please try again."
       });
       return false;
@@ -92,22 +104,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const importedWallet = importWalletWithSeedPhrase(recoveryPhrase, password);
       if (importedWallet) {
         setUser(importedWallet);
-        toast({
-            title: "Wallet login successful",
+        toast.success("Wallet login successful", {
             description: "Welcome back!"
         });
         return true;
       }
       
-      toast({
-        title: "Wallet login failed",
+      toast.error("Wallet login failed", {
         description: "Invalid recovery phrase or password"
       });
       return false;
     } catch (error) {
       console.error("Wallet login error:", error);
-      toast({
-        title: "Login error",
+      toast.error("Login error", {
         description: "An error occurred during wallet login. Please try again."
       });
       return false;
@@ -116,8 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    toast({
-      title: "Logged out",
+    toast.success("Logged out", {
       description: "You have been logged out successfully"
     });
   };
@@ -137,4 +145,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-

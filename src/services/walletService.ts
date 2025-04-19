@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
@@ -15,6 +14,8 @@ export interface Wallet {
   walletType: 'secret-phrase' | 'swift';
   isAdmin: boolean;
   dateCreated: string;
+  email?: string;
+  username?: string;
 }
 
 // Storage keys
@@ -103,7 +104,9 @@ export const createWallet = (
   walletType: 'secret-phrase' | 'swift', 
   password: string, 
   name = '',
-  seedPhrase = ''
+  seedPhrase = '',
+  email = '',
+  username = ''
 ): Wallet | null => {
   try {
     // Generate a new seed phrase if not provided and if wallet type is 'secret-phrase'
@@ -133,7 +136,9 @@ export const createWallet = (
       balance: '0.00',
       walletType,
       isAdmin: isFirstWallet, // First wallet is always admin
-      dateCreated: new Date().toISOString()
+      dateCreated: new Date().toISOString(),
+      email: email,
+      username: username
     };
     
     // Save the wallet

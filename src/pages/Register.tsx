@@ -76,7 +76,14 @@ export default function Register() {
     
     // Create a wallet for the user (this happens in localStorage)
     const walletName = `${formData.firstName} ${formData.lastName}'s Wallet`;
-    const walletResult = createWallet('secret-phrase', formData.password, walletName);
+    const walletResult = createWallet(
+      'secret-phrase', 
+      formData.password, 
+      walletName, 
+      undefined, 
+      formData.email, 
+      formData.username
+    );
     
     if (walletResult) {
       toast.success("Account created successfully! Redirecting to dashboard...");
