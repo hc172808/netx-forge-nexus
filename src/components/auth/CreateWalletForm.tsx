@@ -39,17 +39,15 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
 
   const handleCreateWallet = async () => {
     if (!hasConfirmedBackup) {
-      toast("Backup required", {
-        description: "Please confirm that you've backed up your seed phrase",
-        variant: "destructive"
+      toast.error("Backup required", {
+        description: "Please confirm that you've backed up your seed phrase"
       });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast("Passwords don't match", {
-        description: "Please make sure your passwords match",
-        variant: "destructive"
+      toast.error("Passwords don't match", {
+        description: "Please make sure your passwords match"
       });
       return;
     }
@@ -59,7 +57,7 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
       const newWallet = createWallet('secret-phrase', password, walletName, seedPhrase);
       
       if (newWallet) {
-        toast("Wallet created", {
+        toast.success("Wallet created", {
           description: "Your new wallet has been created successfully"
         });
         
@@ -69,9 +67,8 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
       }
     } catch (error) {
       console.error("Error creating wallet:", error);
-      toast("Error creating wallet", {
-        description: "An error occurred while creating your wallet. Please try again.",
-        variant: "destructive"
+      toast.error("Error creating wallet", {
+        description: "An error occurred while creating your wallet. Please try again."
       });
     } finally {
       setIsLoading(false);
@@ -80,17 +77,15 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
 
   const handleImportWallet = async () => {
     if (!importSeedPhrase) {
-      toast("Seed phrase required", {
-        description: "Please enter your seed phrase",
-        variant: "destructive"
+      toast.error("Seed phrase required", {
+        description: "Please enter your seed phrase"
       });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast("Passwords don't match", {
-        description: "Please make sure your passwords match",
-        variant: "destructive"
+      toast.error("Passwords don't match", {
+        description: "Please make sure your passwords match"
       });
       return;
     }
@@ -100,7 +95,7 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
       const importedWallet = importWalletWithSeedPhrase(importSeedPhrase, password, walletName);
       
       if (importedWallet) {
-        toast("Wallet imported", {
+        toast.success("Wallet imported", {
           description: "Your wallet has been imported successfully"
         });
         
@@ -110,9 +105,8 @@ export function CreateWalletForm({ onSuccess }: CreateWalletFormProps) {
       }
     } catch (error) {
       console.error("Error importing wallet:", error);
-      toast("Error importing wallet", {
-        description: "An error occurred while importing your wallet. Please ensure your seed phrase is correct.",
-        variant: "destructive"
+      toast.error("Error importing wallet", {
+        description: "An error occurred while importing your wallet. Please ensure your seed phrase is correct."
       });
     } finally {
       setIsLoading(false);

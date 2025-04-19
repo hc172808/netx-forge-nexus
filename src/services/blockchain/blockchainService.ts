@@ -1,4 +1,3 @@
-
 import { Block, ConsensusService, ConsensusType, Transaction } from './consensusService';
 import { hashData, signMessage } from '../security/encryptionService';
 
@@ -154,12 +153,18 @@ export class BlockchainService {
       hash = this.calculateBlockHash(blockWithNonce);
     } while (!hash.startsWith(target));
     
-    // Return the complete block with hash
-    return {
+    // Return the complete block with hash and signature
+    const blockWithHash = {
       ...block,
       nonce,
-      hash
+      hash,
+      signature: '' // Add an empty signature initially
     };
+    
+    // Now sign the block
+    blockWithHash.signature = this.signBlock(blockWithHash);
+    
+    return blockWithHash;
   }
   
   // Sign a block using the node's private key

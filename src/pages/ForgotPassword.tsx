@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,9 +18,8 @@ export default function ForgotPassword() {
     e.preventDefault();
     
     if (!email) {
-      toast("Email required", {
-        description: "Please enter your email address",
-        variant: "destructive",
+      toast.error("Email required", {
+        description: "Please enter your email address"
       });
       return;
     }
@@ -34,14 +32,13 @@ export default function ForgotPassword() {
       
       // For demo purposes, just show success
       setIsSubmitted(true);
-      toast("Reset email sent", {
-        description: "Check your inbox for password reset instructions",
+      toast.success("Reset email sent", {
+        description: "Check your inbox for password reset instructions"
       });
     } catch (error) {
       console.error("Password reset error:", error);
-      toast("Reset request failed", {
-        description: "An error occurred. Please try again later.",
-        variant: "destructive",
+      toast.error("Reset request failed", {
+        description: "An error occurred. Please try again later."
       });
     } finally {
       setIsLoading(false);

@@ -52,23 +52,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const activeWallet = getActiveWallet();
         if (activeWallet) {
           setUser(activeWallet);
-          toast("Login successful", {
+          toast.success("Login successful", {
             description: "You are now logged in"
           });
           return true;
         }
       }
       
-      toast("Login failed", {
-        description: "Invalid email or password",
-        variant: "destructive",
+      toast.error("Login failed", {
+        description: "Invalid email or password"
       });
       return false;
     } catch (error) {
       console.error("Login error:", error);
-      toast("Login error", {
-        description: "An error occurred during login. Please try again.",
-        variant: "destructive",
+      toast.error("Login error", {
+        description: "An error occurred during login. Please try again."
       });
       return false;
     }
@@ -83,23 +81,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const activeWallet = getActiveWallet();
         if (activeWallet) {
           setUser(activeWallet);
-          toast("Login successful", {
+          toast.success("Login successful", {
             description: "You are now logged in with your wallet"
           });
           return true;
         }
       }
       
-      toast("Wallet login failed", {
-        description: "Invalid recovery phrase or password",
-        variant: "destructive",
+      toast.error("Wallet login failed", {
+        description: "Invalid recovery phrase or password"
       });
       return false;
     } catch (error) {
       console.error("Wallet login error:", error);
-      toast("Login error", {
-        description: "An error occurred during wallet login. Please try again.",
-        variant: "destructive",
+      toast.error("Login error", {
+        description: "An error occurred during wallet login. Please try again."
       });
       return false;
     }
@@ -109,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     // Clear any local storage/cookies
     // localStorage.removeItem("auth-token"); 
-    toast("Logged out", {
+    toast.success("Logged out", {
       description: "You have been logged out successfully"
     });
   };
