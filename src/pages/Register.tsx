@@ -64,6 +64,26 @@ export default function Register() {
       return false;
     }
     
+    // Check if user with email or username already exists
+    const wallets = localStorage.getItem('netx-wallets');
+    const parsedWallets = wallets ? JSON.parse(wallets) : [];
+    
+    const emailExists = parsedWallets.some((w: any) => w.email === formData.email);
+    if (emailExists) {
+      toast.error("Email already in use", {
+        description: "Please use a different email address"
+      });
+      return false;
+    }
+    
+    const usernameExists = parsedWallets.some((w: any) => w.username === formData.username);
+    if (usernameExists) {
+      toast.error("Username already taken", {
+        description: "Please choose a different username"
+      });
+      return false;
+    }
+    
     return true;
   };
   
@@ -74,41 +94,49 @@ export default function Register() {
     
     setIsSubmitting(true);
     
-    // Create a wallet for the user (this happens in localStorage)
-    const walletName = `${formData.firstName} ${formData.lastName}'s Wallet`;
-    const walletResult = createWallet(
-      'secret-phrase', 
-      formData.password, 
-      walletName, 
-      undefined, 
-      formData.email, 
-      formData.username
-    );
-    
-    if (walletResult) {
-      toast.success("Account created successfully! Redirecting to dashboard...");
+    try {
+      // Create a wallet for the user (this happens in localStorage)
+      const walletName = `${formData.firstName} ${formData.lastName}'s Wallet`;
+      const walletResult = createWallet(
+        'secret-phrase', 
+        formData.password, 
+        walletName, 
+        undefined, 
+        formData.email, 
+        formData.username
+      );
       
-      // Store user profile data (in a real app, this would be in a database)
-      const userData = {
-        id: walletResult.id,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        username: formData.username,
-        isVerified: false,
-        idCardUploaded: false,
-        proofOfAddressUploaded: false,
-        walletId: walletResult.id
-      };
-      
-      localStorage.setItem('user-profile-' + walletResult.id, JSON.stringify(userData));
-      
-      // Wait a moment to show the success message before redirecting
-      setTimeout(() => {
-        navigate('/');
-      }, 1500);
-    } else {
-      toast.error("Failed to create account. Please try again.");
+      if (walletResult) {
+        toast.success("Account created successfully! Redirecting to dashboard...");
+        
+        // Store user profile data (in a real app, this would be in a database)
+        const userData = {
+          id: walletResult.id,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          username: formData.username,
+          isVerified: false,
+          idCardUploaded: false,
+          proofOfAddressUploaded: false,
+          walletId: walletResult.id
+        };
+        
+        localStorage.setItem('user-profile-' + walletResult.id, JSON.stringify(userData));
+        
+        // Wait a moment to show the success message before redirecting
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+      } else {
+        toast.error("Failed to create account. Please try again.");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Registration failed", {
+        description: "An unexpected error occurred. Please try again."
+      });
+    } finally {
       setIsSubmitting(false);
     }
   };

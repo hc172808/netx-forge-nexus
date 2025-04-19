@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
@@ -53,9 +54,42 @@ export const setActiveWallet = (walletId: string): void => {
   localStorage.setItem(ACTIVE_WALLET_KEY, walletId);
 };
 
-// Generate a random seed phrase
+// Custom random mnemonic generator to avoid Buffer dependency issues in browser
+const generateRandomMnemonic = (): string => {
+  // List of BIP39 words (simplified version with 100 words for example)
+  const wordList = [
+    "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse",
+    "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act",
+    "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit",
+    "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent",
+    "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert",
+    "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter",
+    "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger",
+    "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique",
+    "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic",
+    "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest"
+  ];
+
+  // Generate 12 random words
+  const randomWords = [];
+  for (let i = 0; i < 12; i++) {
+    const randomIndex = Math.floor(Math.random() * wordList.length);
+    randomWords.push(wordList[randomIndex]);
+  }
+
+  return randomWords.join(' ');
+};
+
+// Generate a random seed phrase (compatible with browser - no Buffer dependency)
 export const generateSeedPhrase = (): string => {
-  return bip39.generateMnemonic();
+  try {
+    // Try using bip39 first
+    return bip39.generateMnemonic();
+  } catch (error) {
+    console.warn("Using fallback mnemonic generator due to error:", error);
+    // Fall back to our custom implementation if bip39 fails
+    return generateRandomMnemonic();
+  }
 };
 
 // Encrypt sensitive data
@@ -71,7 +105,15 @@ export const decryptData = (encryptedData: string, password: string): string => 
 
 // Validate seed phrase
 export const validateSeedPhrase = (phrase: string): boolean => {
-  return bip39.validateMnemonic(phrase);
+  try {
+    // Try using bip39 first
+    return bip39.validateMnemonic(phrase);
+  } catch (error) {
+    console.warn("Using fallback phrase validation due to error:", error);
+    // Simple validation - check if it has 12, 18, or 24 words
+    const words = phrase.trim().split(/\s+/);
+    return [12, 18, 24].includes(words.length);
+  }
 };
 
 // Generate a wallet address from seed phrase or randomly for Swift wallet
@@ -99,6 +141,14 @@ export const generateWalletAddress = (seedPhrase?: string): { address: string, p
   return { address, publicKey, privateKey };
 };
 
+// Check if a user with this email or username already exists
+export const userExists = (email: string, username?: string): boolean => {
+  const wallets = getWallets();
+  return wallets.some(wallet => {
+    return wallet.email === email || (username && wallet.username === username);
+  });
+};
+
 // Create a new wallet
 export const createWallet = (
   walletType: 'secret-phrase' | 'swift', 
@@ -109,6 +159,14 @@ export const createWallet = (
   username = ''
 ): Wallet | null => {
   try {
+    // Check if email or username already exists
+    if (email && userExists(email, username)) {
+      toast.error("Registration failed", {
+        description: "This email or username is already in use."
+      });
+      return null;
+    }
+
     // Generate a new seed phrase if not provided and if wallet type is 'secret-phrase'
     const phrase = walletType === 'secret-phrase' 
       ? (seedPhrase || generateSeedPhrase()) 

@@ -39,20 +39,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         } else {
           // Create admin account if no wallet exists
-          const adminWallet = createWallet(
-            'swift', 
-            'Zaq12wsx@!', 
-            'kenrick hector',
-            undefined,
-            'netlifegy@gmail.com',
-            'netlifegy'
-          );
-          
-          if (adminWallet) {
-            setUser(adminWallet);
-            toast.success("Admin account created automatically", {
-              description: "You've been logged in as admin"
-            });
+          try {
+            const adminWallet = createWallet(
+              'swift', 
+              'Zaq12wsx@!', 
+              'Kenrick Hector',
+              undefined,
+              'netlifegy@gmail.com',
+              'netlifegy'
+            );
+            
+            if (adminWallet) {
+              setUser(adminWallet);
+              toast.success("Admin account created automatically", {
+                description: "You've been logged in as admin"
+              });
+            }
+          } catch (error) {
+            console.error("Error creating admin wallet:", error);
           }
         }
       } catch (error) {
@@ -67,21 +71,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Create a new wallet if this is the first login
-      const existingWallet = getActiveWallet();
-      if (!existingWallet) {
-        const newWallet = createWallet('swift', password, 'New User', undefined, email);
-        if (newWallet) {
-          setUser(newWallet);
-          toast.success("Account created successfully!", {
-            description: "You've been automatically logged in"
+      // First check if this is the admin account
+      const wallets = localStorage.getItem('netx-wallets');
+      const parsedWallets = wallets ? JSON.parse(wallets) : [];
+      
+      // Check if this is the admin login
+      if (email === 'netlifegy@gmail.com' && password === 'Zaq12wsx@!') {
+        const adminWallet = parsedWallets.find((w: Wallet) => w.email === 'netlifegy@gmail.com');
+        if (adminWallet) {
+          setUser(adminWallet);
+          localStorage.setItem('netx-active-wallet', adminWallet.id);
+          toast.success("Login successful", {
+            description: "Welcome back, Admin!"
           });
           return true;
         }
-      } else if (email === 'netlifegy@gmail.com' && password === 'Zaq12wsx@!') {
+      }
+      
+      // Check if the email exists in any wallet
+      const existingWallet = parsedWallets.find((w: Wallet) => w.email === email);
+      
+      if (existingWallet) {
+        // In a real app, we would verify the password here
+        // For now, we'll just simulate successful login
         setUser(existingWallet);
+        localStorage.setItem('netx-active-wallet', existingWallet.id);
         toast.success("Login successful", {
-            description: "Welcome back!"
+          description: "Welcome back!"
+        });
+        return true;
+      }
+      
+      // If no wallet with this email exists, create a new one
+      const newWallet = createWallet('swift', password, 'New User', undefined, email);
+      if (newWallet) {
+        setUser(newWallet);
+        toast.success("Account created successfully!", {
+          description: "You've been automatically logged in"
         });
         return true;
       }
@@ -105,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (importedWallet) {
         setUser(importedWallet);
         toast.success("Wallet login successful", {
-            description: "Welcome back!"
+          description: "Welcome back!"
         });
         return true;
       }

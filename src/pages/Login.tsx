@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Activity, KeyRound, LogIn, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function Login() {
   const [credentials, setCredentials] = useState({
@@ -38,6 +39,14 @@ export default function Login() {
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!credentials.username || !credentials.password) {
+      toast.error("Login failed", {
+        description: "Please enter both email/username and password"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -47,6 +56,11 @@ export default function Login() {
         // If login was successful, redirect to the page they tried to access
         navigate(from, { replace: true });
       }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Login error", {
+        description: "An unexpected error occurred. Please try again."
+      });
     } finally {
       setIsLoading(false);
     }
@@ -54,6 +68,14 @@ export default function Login() {
 
   const handleWalletSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!recoveryPhrase || !walletPassword) {
+      toast.error("Wallet login failed", {
+        description: "Please enter both recovery phrase and password"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -63,9 +85,35 @@ export default function Login() {
         // If login was successful, redirect to the page they tried to access
         navigate(from, { replace: true });
       }
+    } catch (error) {
+      console.error("Wallet login error:", error);
+      toast.error("Login error", { 
+        description: "An unexpected error occurred. Please try again."
+      });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleWalletProviderLogin = (provider: string) => {
+    toast.info(`${provider} Login`, {
+      description: `Connecting to ${provider}... This feature will be available soon.`
+    });
+    
+    // In a real app, we would connect to the wallet provider here
+    // For now, we'll just simulate a successful login after a short delay
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      setIsLoading(false);
+      // Create a demo wallet for this provider
+      const demoSeedPhrase = "test test test test test test test test test test test test";
+      loginWithWallet(demoSeedPhrase, "demo-password").then(success => {
+        if (success) {
+          navigate(from, { replace: true });
+        }
+      });
+    }, 1500);
   };
 
   return (
@@ -100,10 +148,10 @@ export default function Login() {
               <TabsContent value="credentials" className="p-1">
                 <form className="space-y-4 mt-4" onSubmit={handleCredentialsSubmit}>
                   <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
+                    <Label htmlFor="username">Email or Username</Label>
                     <Input 
                       id="username" 
-                      placeholder="Enter your username" 
+                      placeholder="Enter your email or username" 
                       value={credentials.username}
                       onChange={handleCredentialsChange}
                       disabled={isLoading}
@@ -162,7 +210,13 @@ export default function Login() {
                   </p>
                   
                   <div className="grid gap-2">
-                    <Button variant="outline" className="justify-start" type="button">
+                    <Button 
+                      variant="outline" 
+                      className="justify-start" 
+                      type="button"
+                      onClick={() => handleWalletProviderLogin("Trust Wallet")}
+                      disabled={isLoading}
+                    >
                       <img 
                         src="https://placehold.co/30x30/4c54e8/ffffff.png?text=TW"
                         alt="Trust Wallet" 
@@ -170,7 +224,13 @@ export default function Login() {
                       />
                       Trust Wallet
                     </Button>
-                    <Button variant="outline" className="justify-start" type="button">
+                    <Button 
+                      variant="outline" 
+                      className="justify-start" 
+                      type="button"
+                      onClick={() => handleWalletProviderLogin("Phantom")}
+                      disabled={isLoading}
+                    >
                       <img 
                         src="https://placehold.co/30x30/9945ff/ffffff.png?text=PH"
                         alt="Phantom" 
@@ -178,7 +238,13 @@ export default function Login() {
                       />
                       Phantom Wallet
                     </Button>
-                    <Button variant="outline" className="justify-start" type="button">
+                    <Button 
+                      variant="outline" 
+                      className="justify-start" 
+                      type="button"
+                      onClick={() => handleWalletProviderLogin("MetaMask")}
+                      disabled={isLoading}
+                    >
                       <img 
                         src="https://placehold.co/30x30/f97316/ffffff.png?text=MM"
                         alt="MetaMask" 
