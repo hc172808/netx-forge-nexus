@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
-import { getActiveWallet, Wallet } from '@/services/walletService';
+import { getActiveWallet, Wallet, createWallet, importWalletWithSeedPhrase } from '@/services/walletService';
 
 interface AuthContextType {
   user: Wallet | null;
@@ -32,7 +32,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkAuth = async () => {
       try {
         const activeWallet = getActiveWallet();
-        setUser(activeWallet);
+        if (activeWallet) {
+          setUser(activeWallet);
+          toast({
+            title: "Welcome back!",
+            description: `Logged in as ${activeWallet.name}`
+          });
+        }
       } catch (error) {
         console.error("Error checking authentication:", error);
       } finally {
@@ -45,27 +51,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // For now, this is a simple check as we don't have a real backend yet
-      // This would be replaced with a real API call
-      if (email === 'admin@example.com' && password === 'password') {
-        // Simulate getting the active wallet
-        const activeWallet = getActiveWallet();
-        if (activeWallet) {
-          setUser(activeWallet);
-          toast.success("Login successful", {
-            description: "You are now logged in"
+      // Create a new wallet if this is the first login
+      const existingWallet = getActiveWallet();
+      if (!existingWallet) {
+        const newWallet = createWallet('swift', password, email);
+        if (newWallet) {
+          setUser(newWallet);
+          toast({
+            title: "Account created successfully!",
+            description: "You've been automatically logged in as admin"
           });
           return true;
         }
+      } else if (email === 'admin@example.com' && password === 'password') {
+        setUser(existingWallet);
+        toast({
+            title: "Login successful",
+            description: "Welcome back!"
+        });
+        return true;
       }
       
-      toast.error("Login failed", {
+      toast({
+        title: "Login failed",
         description: "Invalid email or password"
       });
       return false;
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Login error", {
+      toast({
+        title: "Login error",
         description: "An error occurred during login. Please try again."
       });
       return false;
@@ -74,27 +89,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithWallet = async (recoveryPhrase: string, password: string): Promise<boolean> => {
     try {
-      // This would be replaced with a real API call to validate the wallet
-      // For demo purposes, just check if recovery phrase is provided
-      if (recoveryPhrase && password) {
-        // Simulate getting the active wallet
-        const activeWallet = getActiveWallet();
-        if (activeWallet) {
-          setUser(activeWallet);
-          toast.success("Login successful", {
-            description: "You are now logged in with your wallet"
-          });
-          return true;
-        }
+      const importedWallet = importWalletWithSeedPhrase(recoveryPhrase, password);
+      if (importedWallet) {
+        setUser(importedWallet);
+        toast({
+            title: "Wallet login successful",
+            description: "Welcome back!"
+        });
+        return true;
       }
       
-      toast.error("Wallet login failed", {
+      toast({
+        title: "Wallet login failed",
         description: "Invalid recovery phrase or password"
       });
       return false;
     } catch (error) {
       console.error("Wallet login error:", error);
-      toast.error("Login error", {
+      toast({
+        title: "Login error",
         description: "An error occurred during wallet login. Please try again."
       });
       return false;
@@ -103,9 +116,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    // Clear any local storage/cookies
-    // localStorage.removeItem("auth-token"); 
-    toast.success("Logged out", {
+    toast({
+      title: "Logged out",
       description: "You have been logged out successfully"
     });
   };
@@ -125,3 +137,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
