@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,14 +5,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { 
-  AlertCircle, ArrowUpDown, Ban, Check, Coins, Database, Edit, Plus, Search, Server, Trash, UserCheck 
+  AlertCircle, ArrowUpDown, Ban, Check, Coins, Database, Edit, Plus, Search, Server, 
+  Trash, UserCheck, Smartphone, Cpu, HardDrive, Download
 } from "lucide-react";
 import { useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // Mock data for tokens
 const initialTokens = [
@@ -99,29 +100,67 @@ const initialNodes = [
   },
 ];
 
+// New mock data for app builds
+const initialAppBuilds = [
+  {
+    id: "app-001",
+    name: "NETX Mobile Wallet",
+    type: "mobile",
+    platform: "Android",
+    status: "completed",
+    version: "1.0.0",
+    createdAt: "Apr 15, 2025",
+    downloadUrl: "#"
+  },
+  {
+    id: "app-002",
+    name: "NETX Mobile Wallet",
+    type: "mobile",
+    platform: "iOS",
+    status: "completed",
+    version: "1.0.0",
+    createdAt: "Apr 15, 2025",
+    downloadUrl: "#"
+  },
+  {
+    id: "app-003",
+    name: "NETX Mining Tool",
+    type: "desktop",
+    platform: "Windows",
+    status: "completed",
+    version: "1.0.0",
+    createdAt: "Apr 16, 2025",
+    downloadUrl: "#"
+  },
+  {
+    id: "app-004",
+    name: "NETX Node Operator",
+    type: "server",
+    platform: "Linux",
+    status: "building",
+    version: "1.0.0",
+    createdAt: "Apr 19, 2025",
+    progress: 65
+  }
+];
+
 export default function Admin() {
   const [tokens, setTokens] = useState(initialTokens);
   const [nodes, setNodes] = useState(initialNodes);
+  const [appBuilds, setAppBuilds] = useState(initialAppBuilds);
   const [tokenSearchValue, setTokenSearchValue] = useState("");
   const [nodeSearchValue, setNodeSearchValue] = useState("");
-  const { toast } = useToast();
+  const [appSearchValue, setAppSearchValue] = useState("");
   
-  // New state for form data
-  const [newTokenData, setNewTokenData] = useState({
+  // New state for app build dialog
+  const [isBuilding, setIsBuilding] = useState(false);
+  const [buildProgress, setBuildProgress] = useState(0);
+  const [buildApp, setBuildApp] = useState({
     name: "",
-    symbol: "",
-    marketCap: "",
-    status: "pending",
-    creator: "Admin"
+    type: "mobile",
+    platform: "Android"
   });
   
-  const [newNodeData, setNewNodeData] = useState({
-    name: "",
-    type: "slave",
-    ip: "",
-    region: "US-East"
-  });
-
   // Functions for token management
   const disableToken = (id: string) => {
     setTokens(tokens.map(token => 
@@ -168,11 +207,6 @@ export default function Admin() {
       description: `New token ${newTokenData.name} (${newTokenData.symbol}) has been created.`,
     });
   };
-
-  const filteredTokens = tokens.filter(token => 
-    token.name.toLowerCase().includes(tokenSearchValue.toLowerCase()) || 
-    token.symbol.toLowerCase().includes(tokenSearchValue.toLowerCase())
-  );
 
   // Functions for node management
   const toggleNodeStatus = (id: string) => {
@@ -221,9 +255,69 @@ export default function Admin() {
     });
   };
 
+  // Functions for app management
+  const startBuildApp = () => {
+    // Validate build data
+    if (!buildApp.name) {
+      toast.error("Build Failed", {
+        description: "Please provide a name for the app."
+      });
+      return;
+    }
+    
+    setIsBuilding(true);
+    setBuildProgress(0);
+    
+    // Simulate build process
+    const interval = setInterval(() => {
+      setBuildProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            const newApp = {
+              id: `app-${(appBuilds.length + 1).toString().padStart(3, '0')}`,
+              name: buildApp.name,
+              type: buildApp.type,
+              platform: buildApp.platform,
+              status: "completed",
+              version: "1.0.0",
+              createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+              downloadUrl: "#"
+            };
+            
+            setAppBuilds(prev => [...prev, newApp]);
+            setIsBuilding(false);
+            
+            toast.success("Build Completed", {
+              description: `The ${buildApp.name} for ${buildApp.platform} has been built successfully.`
+            });
+            
+            setBuildApp({
+              name: "",
+              type: "mobile",
+              platform: "Android"
+            });
+          }, 500);
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 300);
+  };
+
+  const filteredTokens = tokens.filter(token => 
+    token.name.toLowerCase().includes(tokenSearchValue.toLowerCase()) || 
+    token.symbol.toLowerCase().includes(tokenSearchValue.toLowerCase())
+  );
+
   const filteredNodes = nodes.filter(node => 
     node.name.toLowerCase().includes(nodeSearchValue.toLowerCase()) || 
     node.id.toLowerCase().includes(nodeSearchValue.toLowerCase())
+  );
+  
+  const filteredApps = appBuilds.filter(app => 
+    app.name.toLowerCase().includes(appSearchValue.toLowerCase()) || 
+    app.platform.toLowerCase().includes(appSearchValue.toLowerCase())
   );
 
   return (
@@ -241,11 +335,11 @@ export default function Admin() {
           </BreadcrumbList>
         </Breadcrumb>
         <h1 className="text-2xl font-bold mt-2">Admin Panel</h1>
-        <p className="text-muted-foreground">Manage tokens, nodes, and system configurations</p>
+        <p className="text-muted-foreground">Manage tokens, nodes, system configurations, and app builds</p>
       </div>
       
       <Tabs defaultValue="tokens">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="tokens">
             <Coins className="mr-2 h-4 w-4" />
             Token Management
@@ -253,6 +347,10 @@ export default function Admin() {
           <TabsTrigger value="nodes">
             <Server className="mr-2 h-4 w-4" />
             Node Configuration
+          </TabsTrigger>
+          <TabsTrigger value="apps">
+            <Smartphone className="mr-2 h-4 w-4" />
+            App Builder
           </TabsTrigger>
         </TabsList>
         
@@ -598,6 +696,204 @@ export default function Admin() {
                               size="icon"
                               onClick={() => removeNode(node.id)}
                               className="text-destructive"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="apps" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>App Builder</CardTitle>
+              <CardDescription>
+                Build and manage mobile, mining, and node operation applications
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-4">
+                <div className="relative w-72">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search apps..."
+                    className="pl-8"
+                    value={appSearchValue}
+                    onChange={(e) => setAppSearchValue(e.target.value)}
+                  />
+                </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Build New App
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Build New Application</DialogTitle>
+                      <DialogDescription>
+                        Create a new application for the NETX Forge ecosystem.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="app-name" className="text-right">
+                          App Name
+                        </Label>
+                        <Input 
+                          id="app-name" 
+                          value={buildApp.name} 
+                          onChange={(e) => setBuildApp({...buildApp, name: e.target.value})} 
+                          className="col-span-3" 
+                          placeholder="e.g. NETX Mobile Wallet"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="app-type" className="text-right">
+                          App Type
+                        </Label>
+                        <select 
+                          id="app-type" 
+                          value={buildApp.type} 
+                          onChange={(e) => setBuildApp({...buildApp, type: e.target.value})} 
+                          className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="mobile">Mobile Wallet</option>
+                          <option value="desktop">Mining Tool</option>
+                          <option value="server">Node Operator</option>
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="app-platform" className="text-right">
+                          Platform
+                        </Label>
+                        <select 
+                          id="app-platform" 
+                          value={buildApp.platform} 
+                          onChange={(e) => setBuildApp({...buildApp, platform: e.target.value})} 
+                          className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {buildApp.type === 'mobile' && (
+                            <>
+                              <option value="Android">Android</option>
+                              <option value="iOS">iOS</option>
+                            </>
+                          )}
+                          {buildApp.type === 'desktop' && (
+                            <>
+                              <option value="Windows">Windows</option>
+                              <option value="macOS">macOS</option>
+                              <option value="Linux">Linux</option>
+                            </>
+                          )}
+                          {buildApp.type === 'server' && (
+                            <>
+                              <option value="Linux">Linux</option>
+                              <option value="Docker">Docker</option>
+                            </>
+                          )}
+                        </select>
+                      </div>
+                      
+                      {isBuilding && (
+                        <div className="space-y-2 mt-2">
+                          <Label>Build Progress</Label>
+                          <Progress value={buildProgress} className="h-2" />
+                          <p className="text-sm text-muted-foreground text-center">{buildProgress}% - Building application...</p>
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={startBuildApp} disabled={isBuilding}>
+                        {isBuilding ? "Building..." : "Start Build"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Platform</TableHead>
+                      <TableHead>Version</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredApps.map((app) => (
+                      <TableRow key={app.id}>
+                        <TableCell className="font-medium">{app.name}</TableCell>
+                        <TableCell>
+                          {app.type === "mobile" ? (
+                            <Badge className="bg-blue-500 flex w-fit items-center">
+                              <Smartphone className="mr-1 h-3 w-3" />
+                              Mobile
+                            </Badge>
+                          ) : app.type === "desktop" ? (
+                            <Badge className="bg-purple-500 flex w-fit items-center">
+                              <Cpu className="mr-1 h-3 w-3" />
+                              Desktop
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-green-500 flex w-fit items-center">
+                              <HardDrive className="mr-1 h-3 w-3" />
+                              Server
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>{app.platform}</TableCell>
+                        <TableCell>v{app.version}</TableCell>
+                        <TableCell>{app.createdAt}</TableCell>
+                        <TableCell>
+                          {app.status === "completed" ? (
+                            <Badge className="bg-green-500">Completed</Badge>
+                          ) : app.status === "building" ? (
+                            <div className="space-y-1">
+                              <Badge variant="outline">Building</Badge>
+                              <Progress value={app.progress} className="h-1" />
+                            </div>
+                          ) : (
+                            <Badge variant="secondary">Failed</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {app.status === "completed" && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="text-green-500"
+                                onClick={() => toast.success("Download started", {
+                                  description: `Downloading ${app.name} for ${app.platform}...`
+                                })}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="text-destructive"
+                              onClick={() => {
+                                setAppBuilds(appBuilds.filter(a => a.id !== app.id));
+                                toast.success("App Removed", {
+                                  description: `${app.name} for ${app.platform} has been removed.`
+                                });
+                              }}
                             >
                               <Trash className="h-4 w-4" />
                             </Button>

@@ -1,7 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
-import { getActiveWallet, Wallet, createWallet, importWalletWithSeedPhrase } from '@/services/walletService';
+import { 
+  getActiveWallet, 
+  Wallet, 
+  createWallet, 
+  importWalletWithSeedPhrase, 
+  connectExternalWallet 
+} from '@/services/walletService';
 
 interface AuthContextType {
   user: Wallet | null;
@@ -9,6 +15,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithWallet: (recoveryPhrase: string, password: string) => Promise<boolean>;
+  loginWithExternalWallet: (providerName: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -18,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: async () => false,
   loginWithWallet: async () => false,
+  loginWithExternalWallet: async () => false,
   logout: () => {},
 });
 
@@ -54,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               toast.success("Admin account created automatically", {
                 description: "You've been logged in as admin"
               });
+              console.log("Admin account created:", adminWallet);
             }
           } catch (error) {
             console.error("Error creating admin wallet:", error);
@@ -127,6 +136,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithWallet = async (recoveryPhrase: string, password: string): Promise<boolean> => {
     try {
+      console.log("Attempting wallet login with seed phrase");
+      
       const importedWallet = importWalletWithSeedPhrase(recoveryPhrase, password);
       if (importedWallet) {
         setUser(importedWallet);
@@ -148,9 +159,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
   };
+  
+  const loginWithExternalWallet = async (providerName: string): Promise<boolean> => {
+    try {
+      const connected = await connectExternalWallet(providerName);
+      if (connected) {
+        const activeWallet = getActiveWallet();
+        if (activeWallet) {
+          setUser(activeWallet);
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error(`${providerName} login error:`, error);
+      toast.error("Login error", {
+        description: `An error occurred during ${providerName} login. Please try again.`
+      });
+      return false;
+    }
+  };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('netx-active-wallet');
     toast.success("Logged out", {
       description: "You have been logged out successfully"
     });
@@ -164,6 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         loginWithWallet,
+        loginWithExternalWallet,
         logout
       }}
     >
