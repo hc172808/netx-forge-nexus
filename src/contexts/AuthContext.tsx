@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { 
@@ -36,17 +35,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
     const checkAuth = async () => {
       try {
+        setIsLoading(true);
         const activeWallet = getActiveWallet();
+        
         if (activeWallet) {
+          console.log("Found active wallet:", activeWallet);
           setUser(activeWallet);
-          toast.success("Welcome back!", {
-            description: `Logged in as ${activeWallet.name}`
-          });
+          
+          if (!isLoading) {
+            toast.success("Welcome back!", {
+              description: `Logged in as ${activeWallet.name}`
+            });
+          }
         } else {
-          // Create admin account if no wallet exists
+          console.log("No active wallet found, creating admin account");
           try {
             const adminWallet = createWallet(
               'swift', 
@@ -76,15 +80,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     checkAuth();
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'netx-active-wallet') {
+        console.log("Storage changed for active wallet, reloading user");
+        checkAuth();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // First check if this is the admin account
+      console.log(`Attempting to login with email: ${email}`);
       const wallets = localStorage.getItem('netx-wallets');
       const parsedWallets = wallets ? JSON.parse(wallets) : [];
       
-      // Check if this is the admin login
       if (email === 'netlifegy@gmail.com' && password === 'Zaq12wsx@!') {
         const adminWallet = parsedWallets.find((w: Wallet) => w.email === 'netlifegy@gmail.com');
         if (adminWallet) {
@@ -97,12 +113,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
-      // Check if the email exists in any wallet
       const existingWallet = parsedWallets.find((w: Wallet) => w.email === email);
       
       if (existingWallet) {
-        // In a real app, we would verify the password here
-        // For now, we'll just simulate successful login
+        if (password !== 'Zaq12wsx@!' && existingWallet.email === 'netlifegy@gmail.com') {
+          toast.error("Email already in use", {
+            description: "This email is already associated with an admin account."
+          });
+          return false;
+        }
+        
         setUser(existingWallet);
         localStorage.setItem('netx-active-wallet', existingWallet.id);
         toast.success("Login successful", {
@@ -111,7 +131,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return true;
       }
       
-      // If no wallet with this email exists, create a new one
       const newWallet = createWallet('swift', password, 'New User', undefined, email);
       if (newWallet) {
         setUser(newWallet);
@@ -162,14 +181,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const loginWithExternalWallet = async (providerName: string): Promise<boolean> => {
     try {
+      console.log(`Attempting to login with ${providerName}`);
       const connected = await connectExternalWallet(providerName);
+      
       if (connected) {
         const activeWallet = getActiveWallet();
         if (activeWallet) {
           setUser(activeWallet);
+          toast.success(`${providerName} connected successfully`, {
+            description: "Your wallet has been connected"
+          });
           return true;
         }
       }
+      
+      toast.error(`${providerName} connection failed`, {
+        description: "Could not connect to the wallet. Please try again."
+      });
       return false;
     } catch (error) {
       console.error(`${providerName} login error:`, error);
@@ -181,6 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    console.log("Logging out user");
     setUser(null);
     localStorage.removeItem('netx-active-wallet');
     toast.success("Logged out", {

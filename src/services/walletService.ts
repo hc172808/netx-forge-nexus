@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
@@ -8,15 +7,15 @@ export interface Wallet {
   id: string;
   name: string;
   address: string;
-  privateKey: string; // Encrypted
+  privateKey: string;
   publicKey: string;
-  seedPhrase: string; // Encrypted
+  seedPhrase: string;
   balance: string;
-  walletType: 'secret-phrase' | 'swift';
-  isAdmin: boolean;
-  dateCreated: string;
+  walletType: "swift" | "secret-phrase" | "external";
   email?: string;
   username?: string;
+  isAdmin?: boolean;
+  dateCreated: string;
 }
 
 // Storage keys
@@ -396,45 +395,52 @@ export const getDecryptedSeedPhrase = (walletId: string, password: string): stri
 
 // Connect external wallet (Phantom, MetaMask, etc.)
 export const connectExternalWallet = async (providerName: string): Promise<boolean> => {
-  try {
-    // In a real implementation, this would connect to the browser extension
-    // For now, we'll just simulate a successful connection
-    toast.success("Connection initiated", {
-      description: `Connecting to ${providerName}...`
-    });
-    
+  console.log(`Attempting to connect to ${providerName}...`);
+  
+  return new Promise((resolve) => {
     // Simulate connection delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Generate a fake wallet for demo purposes
-    const fakeWallet = {
-      id: Date.now().toString(),
-      name: `${providerName} Wallet`,
-      address: '0x' + [...Array(40)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-      privateKey: encryptData("external-wallet-no-private-key", "password"),
-      publicKey: [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-      seedPhrase: encryptData("external wallet has no seed phrase", "password"),
-      balance: (Math.random() * 9000 + 1000).toFixed(2),
-      walletType: 'swift',
-      isAdmin: false,
-      dateCreated: new Date().toISOString()
-    };
-    
-    // Save the simulated wallet
-    const wallets = getWallets();
-    saveWallets([...wallets, fakeWallet]);
-    setActiveWallet(fakeWallet.id);
-    
-    toast.success("Connection successful", {
-      description: `Your ${providerName} wallet has been connected.`
-    });
-    
-    return true;
-  } catch (error) {
-    console.error(`${providerName} connection error:`, error);
-    toast.error("Connection failed", {
-      description: `There was an error connecting to ${providerName}. Please try again.`
-    });
-    return false;
-  }
+    setTimeout(() => {
+      try {
+        // Create a wallet entry for the external provider
+        const walletId = generateUniqueId();
+        const fakeAddress = `0x${Array(40).fill(0).map(() => 
+          Math.floor(Math.random() * 16).toString(16)).join('')}`;
+        
+        // Create mock wallet data
+        const wallet: Wallet = {
+          id: walletId,
+          name: `${providerName} Wallet`,
+          address: fakeAddress,
+          privateKey: "external-managed", // External wallets manage their own private keys
+          publicKey: "external-managed",
+          seedPhrase: "external-managed",
+          balance: (Math.random() * 10).toFixed(4),
+          walletType: "external" as "swift", // Type assertion to make TypeScript happy
+          email: "",
+          username: `${providerName.toLowerCase()}-user`,
+          dateCreated: new Date().toISOString()
+        };
+        
+        // Store the wallet
+        const existingWallets = localStorage.getItem('netx-wallets');
+        const wallets = existingWallets ? JSON.parse(existingWallets) : [];
+        wallets.push(wallet);
+        localStorage.setItem('netx-wallets', JSON.stringify(wallets));
+        
+        // Set as active wallet
+        localStorage.setItem('netx-active-wallet', walletId);
+        
+        console.log(`Successfully connected to ${providerName}`);
+        resolve(true);
+      } catch (error) {
+        console.error(`Error connecting to ${providerName}:`, error);
+        resolve(false);
+      }
+    }, 1500); // Simulate connection delay
+  });
 };
+
+// Generate a unique ID
+function generateUniqueId(): string {
+  return Date.now().toString() + Math.random().toString(36).substring(2);
+}

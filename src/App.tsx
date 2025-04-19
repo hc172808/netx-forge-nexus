@@ -25,6 +25,7 @@ import NotFound from "@/pages/NotFound";
 import NodeSetup from "@/pages/NodeSetup";
 import Settings from "@/pages/Settings";
 import ForgotPassword from "@/pages/ForgotPassword";
+import Logout from "@/pages/Logout";
 
 // Layout
 import { Layout } from "@/components/layout/Layout";
@@ -44,6 +45,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/logout" element={<Logout />} />
         
         {/* Protected routes */}
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>

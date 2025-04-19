@@ -19,12 +19,14 @@ const ExternalWalletLogin: React.FC<ExternalWalletLoginProps> = ({ onSuccess }) 
     
     setIsLoading(walletName);
     try {
+      console.log(`Attempting to connect to ${walletName}...`);
       const success = await loginWithExternalWallet(walletName);
+      
       if (success) {
-        toast.success(`Connected to ${walletName}`, {
-          description: "Wallet connected successfully"
-        });
+        console.log(`Successfully connected to ${walletName}`);
         if (onSuccess) onSuccess();
+      } else {
+        console.log(`Failed to connect to ${walletName}`);
       }
     } catch (error) {
       console.error(`Error connecting to ${walletName}:`, error);

@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -152,6 +153,22 @@ export default function Admin() {
   const [nodeSearchValue, setNodeSearchValue] = useState("");
   const [appSearchValue, setAppSearchValue] = useState("");
   
+  // Add missing state variables
+  const [newTokenData, setNewTokenData] = useState({
+    name: "",
+    symbol: "",
+    marketCap: "",
+    status: "pending",
+    creator: "Admin"
+  });
+  
+  const [newNodeData, setNewNodeData] = useState({
+    name: "",
+    type: "slave",
+    ip: "",
+    region: "US-East"
+  });
+  
   // New state for app build dialog
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
@@ -167,18 +184,16 @@ export default function Admin() {
       token.id === id ? { ...token, status: token.status === "active" ? "disabled" : "active" } : token
     ));
     
-    toast({
-      title: "Token Status Updated",
-      description: "The token status has been successfully changed.",
+    toast.success("Token Status Updated", {
+      description: "The token status has been successfully changed."
     });
   };
 
   const removeToken = (id: string) => {
     setTokens(tokens.filter(token => token.id !== id));
     
-    toast({
-      title: "Token Removed",
-      description: "The token has been successfully removed from the system.",
+    toast.success("Token Removed", {
+      description: "The token has been successfully removed from the system."
     });
   };
   
@@ -202,9 +217,8 @@ export default function Admin() {
       creator: "Admin"
     });
     
-    toast({
-      title: "Token Added",
-      description: `New token ${newTokenData.name} (${newTokenData.symbol}) has been created.`,
+    toast.success("Token Added", {
+      description: `New token ${newTokenData.name} (${newTokenData.symbol}) has been created.`
     });
   };
 
@@ -214,18 +228,16 @@ export default function Admin() {
       node.id === id ? { ...node, status: node.status === "online" ? "offline" : "online" } : node
     ));
     
-    toast({
-      title: "Node Status Updated",
-      description: "The node status has been successfully changed.",
+    toast.success("Node Status Updated", {
+      description: "The node status has been successfully changed."
     });
   };
 
   const removeNode = (id: string) => {
     setNodes(nodes.filter(node => node.id !== id));
     
-    toast({
-      title: "Node Removed",
-      description: "The node has been successfully removed from the network.",
+    toast.success("Node Removed", {
+      description: "The node has been successfully removed from the network."
     });
   };
   
@@ -249,9 +261,8 @@ export default function Admin() {
       region: "US-East"
     });
     
-    toast({
-      title: "Node Added",
-      description: `New ${type} node "${newNodeData.name}" has been added to the network.`,
+    toast.success("Node Added", {
+      description: `New ${type} node "${newNodeData.name}" has been added to the network.`
     });
   };
 
